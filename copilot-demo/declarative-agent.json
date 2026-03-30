@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.0/schema.json",
+  "version": "v1.0",
+  "name": "InternalAI Demo Agent",
+  "description": "A demo agent for planning and executing API use cases.",
+  "instructions": "Use the connected API plugin to list operations or execute a user goal. Keep responses short and focused. If the user asks to inspect the API, use the list-operations capability. If the user asks to run a goal, invoke the run capability.",
+  "conversation_starters": [
+    {
+      "title": "List operations",
+      "text": "Show me the available API operations"
+    },
+    {
+      "title": "Run a goal",
+      "text": "Inspect team member 42"
+    }
+  ],
+  "actions": [
+    {
+      "id": "internalAiDemoPlugin",
+      "file": "api-plugin.json"
+    }
+  ]
+}

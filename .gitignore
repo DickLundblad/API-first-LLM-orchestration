@@ -1,0 +1,44 @@
+# Build outputs
+bin/
+obj/
+out/
+TestResults/
+CoverageReport/
+artifacts/
+
+# .NET / NuGet
+project.lock.json
+packages/
+*.nupkg
+*.snupkg
+*.user
+*.rsuser
+*.suo
+
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.VC.opendb
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+*.DotSettings.user
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local environment and CLI caches
+.dotnet/
+.dotnet-home/
+.nuget-packages/
+
+# Temporary files
+*.tmp
+*.log
+*.cache
