@@ -18,6 +18,7 @@ Options:
 
 MCP tools:
   health
+  search_operations
   list_operations
   run_use_case
 

@@ -198,4 +198,8 @@ For a remote ChatGPT-friendly URL, add `--http-prefix http://localhost:5055/` an
 
 See `chatgpt-app/README.md` for the minimal ChatGPT app layout.
 
+## Claude Desktop
+
+See `claude-desktop/README.md` for the smallest local MCP setup.
+
 

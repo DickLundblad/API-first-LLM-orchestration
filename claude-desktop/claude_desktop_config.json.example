@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "api-first-llm-orchestration": {
+      "command": "C:\\git\\API-first-LLM-orchestration\\claude-desktop\\start-mcp-server.cmd",
+      "args": []
+    }
+  }
+}
