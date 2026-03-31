@@ -657,7 +657,8 @@ public sealed class McpServer
             return _options.DefaultUserId;
         }
 
-        throw new InvalidOperationException("Specify userId either on the tool call or when launching the server.");
+        // MVP default: single-session server mode when client does not provide userId.
+        return "default-user";
     }
 
     private static (string ToolName, IReadOnlyDictionary<string, string?> Arguments) GetToolCall(JsonElement message)
