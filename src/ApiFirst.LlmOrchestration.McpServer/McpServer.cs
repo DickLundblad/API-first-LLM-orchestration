@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Net;
 using System.Text.Json;
 using ApiFirst.LlmOrchestration.Abstractions;
 using ApiFirst.LlmOrchestration.Configuration;
@@ -57,6 +59,27 @@ public sealed class McpServer
                 }
             }),
         new McpToolDefinition(
+            "login",
+            "Authenticate a user and store a session cookie for later API calls.",
+            false,
+            new Dictionary<string, object?>
+            {
+                ["type"] = "object",
+                ["required"] = new[] { "username", "password" },
+                ["properties"] = new Dictionary<string, object?>
+                {
+                    ["userId"] = new Dictionary<string, object?> { ["type"] = "string" },
+                    ["swaggerUrl"] = new Dictionary<string, object?> { ["type"] = "string" },
+                    ["swaggerFile"] = new Dictionary<string, object?> { ["type"] = "string" },
+                    ["apiBaseUrl"] = new Dictionary<string, object?> { ["type"] = "string" },
+                    ["username"] = new Dictionary<string, object?> { ["type"] = "string" },
+                    ["password"] = new Dictionary<string, object?> { ["type"] = "string" },
+                    ["requestBodyJson"] = new Dictionary<string, object?> { ["type"] = "string" },
+                    ["loginOperationId"] = new Dictionary<string, object?> { ["type"] = "string" },
+                    ["loginPath"] = new Dictionary<string, object?> { ["type"] = "string" }
+                }
+            }),
+        new McpToolDefinition(
             "run_use_case",
             "Plan and execute a goal against the target API.",
             false,
@@ -80,6 +103,7 @@ public sealed class McpServer
     private readonly ISwaggerDocumentLoader _swaggerDocumentLoader;
     private readonly IUserModelSettingsProvider _userModelSettingsProvider;
     private readonly ITextGenerationClientFactory _textGenerationClientFactory;
+    private readonly ConcurrentDictionary<string, ApiSession> _apiSessions = new(StringComparer.OrdinalIgnoreCase);
 
     private McpServer(
         McpServerOptions options,
@@ -245,6 +269,7 @@ public sealed class McpServer
                 "health" => CreateToolResult("ok", new { status = "ok" }),
                 "search_operations" => await SearchOperationsAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "list_operations" => await ListOperationsAsync(arguments, cancellationToken).ConfigureAwait(false),
+                "login" => await LoginAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "run_use_case" => await RunUseCaseAsync(arguments, cancellationToken).ConfigureAwait(false),
                 _ => CreateToolError($"Unknown tool '{toolName}'.")
             };
@@ -321,6 +346,67 @@ public sealed class McpServer
     }
 
 
+    private async Task<object> LoginAsync(IReadOnlyDictionary<string, string?> arguments, CancellationToken cancellationToken)
+    {
+        var userId = ResolveUserId(arguments);
+        var swaggerSource = ResolveSwaggerUrl(arguments) ?? ResolveSwaggerFile(arguments);
+        var apiBaseUrl = ResolveApiBaseUrl(arguments, swaggerSource);
+        var catalog = await LoadCatalogAsync(arguments, cancellationToken).ConfigureAwait(false);
+
+        var operation = ResolveLoginOperation(arguments, catalog);
+        var username = Require(arguments, "username");
+        var password = Require(arguments, "password");
+
+        var actionArguments = BuildActionArguments(operation, arguments);
+        var requestBodyJson = arguments.TryGetValue("requestBodyJson", out var explicitBody) && !string.IsNullOrWhiteSpace(explicitBody)
+            ? explicitBody
+            : JsonSerializer.Serialize(new { username, password });
+
+        var cookieContainer = new CookieContainer();
+        var handler = new HttpClientHandler
+        {
+            UseCookies = true,
+            CookieContainer = cookieContainer,
+            AllowAutoRedirect = true
+        };
+        var client = new HttpClient(handler);
+
+        var executor = new HttpApiExecutor(client, apiBaseUrl, catalog.ServerBasePath);
+        var action = new PlannedAction(operation.OperationId, actionArguments, requestBodyJson);
+        var result = await executor.ExecuteAsync(operation, action, cancellationToken).ConfigureAwait(false);
+
+        if (!result.Succeeded)
+        {
+            client.Dispose();
+            handler.Dispose();
+            throw new InvalidOperationException($"Login failed ({(int)result.StatusCode.GetValueOrDefault()}). {result.ResponseBody}");
+        }
+
+        var session = new ApiSession(client, handler, cookieContainer);
+        var key = BuildSessionKey(userId, apiBaseUrl);
+        _apiSessions.AddOrUpdate(
+            key,
+            _ => session,
+            (_, existing) =>
+            {
+                existing.Dispose();
+                return session;
+            });
+
+        var cookieCount = cookieContainer.GetCookies(apiBaseUrl).Count;
+
+        return CreateToolResult(
+            $"Logged in as '{userId}' using operation '{operation.OperationId}'.",
+            new
+            {
+                userId,
+                operationId = operation.OperationId,
+                statusCode = result.StatusCode.HasValue ? (int?)result.StatusCode.Value : null,
+                cookieCount,
+                responseBody = result.ResponseBody
+            });
+    }
+
     private async Task<object> RunUseCaseAsync(IReadOnlyDictionary<string, string?> arguments, CancellationToken cancellationToken)
     {
         var userId = ResolveUserId(arguments);
@@ -329,65 +415,178 @@ public sealed class McpServer
         var apiBaseUrl = ResolveApiBaseUrl(arguments, swaggerSource);
         var catalog = await LoadCatalogAsync(arguments, cancellationToken).ConfigureAwait(false);
 
-        var executor = new HttpApiExecutor(new HttpClient(), apiBaseUrl, catalog.ServerBasePath);
+        string apiAuthMode;
+        HttpClient? ephemeralHttpClient = null;
+        HttpApiExecutor executor;
 
-        IUseCasePlanner planner;
-        string planningMode;
-
-        if (arguments.TryGetValue("planJson", out var planJson) && !string.IsNullOrWhiteSpace(planJson))
+        if (TryGetSession(userId, apiBaseUrl, out var session) && session is not null)
         {
-            var parsedPlan = new UseCasePlanJsonParser().Parse(planJson, catalog);
-            planner = new StaticUseCasePlanner(parsedPlan);
-            planningMode = "client_hosted";
+            executor = new HttpApiExecutor(session.Client, apiBaseUrl, catalog.ServerBasePath);
+            apiAuthMode = "session_cookie";
         }
         else
         {
-            try
+            ephemeralHttpClient = new HttpClient();
+            executor = new HttpApiExecutor(ephemeralHttpClient, apiBaseUrl, catalog.ServerBasePath);
+            apiAuthMode = "none";
+        }
+
+        try
+        {
+            IUseCasePlanner planner;
+            string planningMode;
+
+            if (arguments.TryGetValue("planJson", out var planJson) && !string.IsNullOrWhiteSpace(planJson))
             {
-                var settings = await _userModelSettingsProvider.GetAsync(userId, cancellationToken).ConfigureAwait(false);
-                var client = _textGenerationClientFactory.Create(settings);
-                planner = new ValidatingUseCasePlanner(client);
-                planningMode = "user_key";
+                var parsedPlan = new UseCasePlanJsonParser().Parse(planJson, catalog);
+                planner = new StaticUseCasePlanner(parsedPlan);
+                planningMode = "client_hosted";
             }
-            catch (InvalidOperationException)
+            else
             {
-                planner = new DeterministicFallbackPlanner();
-                planningMode = "fallback_no_license";
+                try
+                {
+                    var settings = await _userModelSettingsProvider.GetAsync(userId, cancellationToken).ConfigureAwait(false);
+                    var client = _textGenerationClientFactory.Create(settings);
+                    planner = new ValidatingUseCasePlanner(client);
+                    planningMode = "user_key";
+                }
+                catch (InvalidOperationException)
+                {
+                    planner = new DeterministicFallbackPlanner();
+                    planningMode = "fallback_no_license";
+                }
+                catch (NotSupportedException)
+                {
+                    planner = new DeterministicFallbackPlanner();
+                    planningMode = "fallback_no_license";
+                }
             }
-            catch (NotSupportedException)
+
+            var orchestrator = new ApiAgentOrchestrator(_swaggerDocumentLoader, planner, executor);
+            var result = await orchestrator.ExecuteAsync(catalog, new UseCaseRequest(goal), cancellationToken).ConfigureAwait(false);
+
+            return CreateToolResult(
+                $"Executed plan '{result.Plan.Name}' with {result.Results.Count} result(s).",
+                new
+                {
+                    planningMode,
+                    apiAuthMode,
+                    Plan = new
+                    {
+                        result.Plan.Name,
+                        result.Plan.Rationale,
+                        Actions = result.Plan.Actions.Select(action => new
+                        {
+                            action.OperationId,
+                            action.Arguments,
+                            action.RequestBodyJson
+                        }).ToArray()
+                    },
+                    Results = result.Results.Select(item => new
+                    {
+                        item.OperationId,
+                        item.Succeeded,
+                        StatusCode = item.StatusCode.HasValue ? (int?)item.StatusCode.Value : null,
+                        item.ResponseBody
+                    }).ToArray()
+                });
+        }
+        finally
+        {
+            ephemeralHttpClient?.Dispose();
+        }
+    }
+
+    private static SwaggerOperation ResolveLoginOperation(IReadOnlyDictionary<string, string?> arguments, SwaggerDocumentCatalog catalog)
+    {
+        if (arguments.TryGetValue("loginOperationId", out var explicitOperationId) && !string.IsNullOrWhiteSpace(explicitOperationId))
+        {
+            return catalog.GetRequiredOperation(explicitOperationId);
+        }
+
+        if (arguments.TryGetValue("loginPath", out var explicitLoginPath) && !string.IsNullOrWhiteSpace(explicitLoginPath))
+        {
+            var normalizedPath = NormalizePath(explicitLoginPath);
+            var byPath = catalog.Operations.FirstOrDefault(operation =>
+                operation.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)
+                && NormalizePath(operation.Path).Equals(normalizedPath, StringComparison.OrdinalIgnoreCase));
+
+            if (byPath is not null)
             {
-                planner = new DeterministicFallbackPlanner();
-                planningMode = "fallback_no_license";
+                return byPath;
             }
         }
 
-        var orchestrator = new ApiAgentOrchestrator(_swaggerDocumentLoader, planner, executor);
-        var result = await orchestrator.ExecuteAsync(catalog, new UseCaseRequest(goal), cancellationToken).ConfigureAwait(false);
+        var inferred = catalog.Operations.FirstOrDefault(operation =>
+            operation.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)
+            && (Contains(operation.OperationId, "login")
+                || Contains(operation.Summary, "login")
+                || Contains(operation.Path, "login")
+                || Contains(operation.OperationId, "signin")
+                || Contains(operation.Summary, "signin")
+                || Contains(operation.Path, "signin")
+                || Contains(operation.OperationId, "auth")
+                || Contains(operation.Summary, "auth")
+                || Contains(operation.Path, "auth")
+                || Contains(operation.OperationId, "session")
+                || Contains(operation.Summary, "session")
+                || Contains(operation.Path, "session")));
 
-        return CreateToolResult(
-            $"Executed plan '{result.Plan.Name}' with {result.Results.Count} result(s).",
-            new
+        if (inferred is not null)
+        {
+            return inferred;
+        }
+
+        throw new InvalidOperationException("Could not infer login operation. Provide 'loginOperationId' or 'loginPath'.");
+    }
+
+    private static IReadOnlyDictionary<string, string?> BuildActionArguments(SwaggerOperation operation, IReadOnlyDictionary<string, string?> arguments)
+    {
+        var result = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var parameter in operation.Parameters)
+        {
+            if (arguments.TryGetValue(parameter.Name, out var value) && !string.IsNullOrWhiteSpace(value))
             {
-                planningMode,
-                Plan = new
-                {
-                    result.Plan.Name,
-                    result.Plan.Rationale,
-                    Actions = result.Plan.Actions.Select(action => new
-                    {
-                        action.OperationId,
-                        action.Arguments,
-                        action.RequestBodyJson
-                    }).ToArray()
-                },
-                Results = result.Results.Select(item => new
-                {
-                    item.OperationId,
-                    item.Succeeded,
-                    StatusCode = item.StatusCode.HasValue ? (int?)item.StatusCode.Value : null,
-                    item.ResponseBody
-                }).ToArray()
-            });
+                result[parameter.Name] = value;
+            }
+
+            if (parameter.Location.Equals("path", StringComparison.OrdinalIgnoreCase)
+                && parameter.Required
+                && (!result.TryGetValue(parameter.Name, out var requiredValue) || string.IsNullOrWhiteSpace(requiredValue)))
+            {
+                throw new InvalidOperationException($"Missing required login path parameter '{parameter.Name}'.");
+            }
+        }
+
+        return result;
+    }
+
+    private static string NormalizePath(string path)
+    {
+        var value = path.Split('?', 2)[0].Trim();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "/";
+        }
+
+        if (!value.StartsWith('/'))
+        {
+            value = "/" + value;
+        }
+
+        return value.Length > 1 ? value.TrimEnd('/') : value;
+    }
+
+    private bool TryGetSession(string userId, Uri apiBaseUrl, out ApiSession? session)
+    {
+        return _apiSessions.TryGetValue(BuildSessionKey(userId, apiBaseUrl), out session);
+    }
+
+    private static string BuildSessionKey(string userId, Uri apiBaseUrl)
+    {
+        return $"{userId.ToLowerInvariant()}|{apiBaseUrl.GetLeftPart(UriPartial.Authority).ToLowerInvariant()}";
     }
     private async Task<SwaggerDocumentCatalog> LoadCatalogAsync(IReadOnlyDictionary<string, string?> arguments, CancellationToken cancellationToken)
     {
@@ -593,6 +792,26 @@ public sealed class McpServer
         [property: System.Text.Json.Serialization.JsonPropertyName("code")] int Code,
         [property: System.Text.Json.Serialization.JsonPropertyName("message")] string Message);
 
+    internal sealed class ApiSession : IDisposable
+    {
+        public ApiSession(HttpClient client, HttpClientHandler handler, CookieContainer cookies)
+        {
+            Client = client;
+            Handler = handler;
+            Cookies = cookies;
+        }
+
+        public HttpClient Client { get; }
+        public HttpClientHandler Handler { get; }
+        public CookieContainer Cookies { get; }
+
+        public void Dispose()
+        {
+            Client.Dispose();
+            Handler.Dispose();
+        }
+    }
+
     internal sealed class RequestDispatcher
     {
         private readonly McpServer _server;
@@ -608,15 +827,3 @@ public sealed class McpServer
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
