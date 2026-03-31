@@ -70,7 +70,8 @@ public sealed class McpServer
                     ["swaggerUrl"] = new Dictionary<string, object?> { ["type"] = "string" },
                     ["swaggerFile"] = new Dictionary<string, object?> { ["type"] = "string" },
                     ["apiBaseUrl"] = new Dictionary<string, object?> { ["type"] = "string" },
-                    ["goal"] = new Dictionary<string, object?> { ["type"] = "string" }
+                    ["goal"] = new Dictionary<string, object?> { ["type"] = "string" },
+                    ["planJson"] = new Dictionary<string, object?> { ["type"] = "string" }
                 }
             })
     ];
@@ -328,18 +329,46 @@ public sealed class McpServer
         var apiBaseUrl = ResolveApiBaseUrl(arguments, swaggerSource);
         var catalog = await LoadCatalogAsync(arguments, cancellationToken).ConfigureAwait(false);
 
-        var settings = await _userModelSettingsProvider.GetAsync(userId, cancellationToken).ConfigureAwait(false);
-        var client = _textGenerationClientFactory.Create(settings);
-        var planner = new ValidatingUseCasePlanner(client);
         var executor = new HttpApiExecutor(new HttpClient(), apiBaseUrl, catalog.ServerBasePath);
-        var orchestrator = new ApiAgentOrchestrator(_swaggerDocumentLoader, planner, executor);
 
+        IUseCasePlanner planner;
+        string planningMode;
+
+        if (arguments.TryGetValue("planJson", out var planJson) && !string.IsNullOrWhiteSpace(planJson))
+        {
+            var parsedPlan = new UseCasePlanJsonParser().Parse(planJson, catalog);
+            planner = new StaticUseCasePlanner(parsedPlan);
+            planningMode = "client_hosted";
+        }
+        else
+        {
+            try
+            {
+                var settings = await _userModelSettingsProvider.GetAsync(userId, cancellationToken).ConfigureAwait(false);
+                var client = _textGenerationClientFactory.Create(settings);
+                planner = new ValidatingUseCasePlanner(client);
+                planningMode = "user_key";
+            }
+            catch (InvalidOperationException)
+            {
+                planner = new DeterministicFallbackPlanner();
+                planningMode = "fallback_no_license";
+            }
+            catch (NotSupportedException)
+            {
+                planner = new DeterministicFallbackPlanner();
+                planningMode = "fallback_no_license";
+            }
+        }
+
+        var orchestrator = new ApiAgentOrchestrator(_swaggerDocumentLoader, planner, executor);
         var result = await orchestrator.ExecuteAsync(catalog, new UseCaseRequest(goal), cancellationToken).ConfigureAwait(false);
 
         return CreateToolResult(
             $"Executed plan '{result.Plan.Name}' with {result.Results.Count} result(s).",
             new
             {
+                planningMode,
                 Plan = new
                 {
                     result.Plan.Name,
@@ -579,6 +608,8 @@ public sealed class McpServer
         }
     }
 }
+
+
 
 
 

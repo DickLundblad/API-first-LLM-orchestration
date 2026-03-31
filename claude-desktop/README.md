@@ -18,4 +18,11 @@ The launcher script `start-mcp-server.cmd` starts the server with:
 
 - `--swagger-url http://localhost:5000/api/swagger.json`
 
+It also has a convenience fallback for `run_use_case`:
+
+- If `API_ORCH_ADMIN_API_KEY` is missing but `OPENAI_API_KEY` exists, the script sets:
+- `API_ORCH_ADMIN_PROVIDER=openai`
+- `API_ORCH_ADMIN_MODEL=gpt-5.4-mini`
+- `API_ORCH_ADMIN_API_KEY=%OPENAI_API_KEY%`
+
 You can add extra arguments in Claude config `args` if needed.
