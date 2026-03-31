@@ -43,13 +43,26 @@ public static class McpHttpRunner
                 return;
             }
 
-            if (request.Method.Equals("GET", StringComparison.OrdinalIgnoreCase) && request.Path.Equals("/health", StringComparison.OrdinalIgnoreCase))
+            var normalizedPath = NormalizePath(request.Path);
+
+            if (request.Method.Equals("GET", StringComparison.OrdinalIgnoreCase) && normalizedPath.Equals("/health", StringComparison.OrdinalIgnoreCase))
             {
                 await WriteResponseAsync(stream, 200, "ok", "text/plain; charset=utf-8", cancellationToken).ConfigureAwait(false);
                 return;
             }
 
-            if (request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase) && request.Path.Equals("/mcp", StringComparison.OrdinalIgnoreCase))
+            if (request.Method.Equals("GET", StringComparison.OrdinalIgnoreCase) && normalizedPath.Equals("/mcp", StringComparison.OrdinalIgnoreCase))
+            {
+                await WriteResponseAsync(
+                    stream,
+                    200,
+                    "MCP endpoint is available. Use POST /mcp with JSON-RPC body.",
+                    "text/plain; charset=utf-8",
+                    cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            if (request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase) && normalizedPath.Equals("/mcp", StringComparison.OrdinalIgnoreCase))
             {
                 using var output = new StringWriter();
                 await server.RunAsync(new StringReader(request.Body), output, TextWriter.Null, cancellationToken).ConfigureAwait(false);
@@ -63,6 +76,22 @@ public static class McpHttpRunner
         {
             await WriteResponseAsync(stream, 500, ex.Message, "text/plain; charset=utf-8", cancellationToken).ConfigureAwait(false);
         }
+    }
+
+    private static string NormalizePath(string rawPath)
+    {
+        var pathOnly = rawPath.Split('?', 2)[0].Split('#', 2)[0];
+        if (string.IsNullOrWhiteSpace(pathOnly))
+        {
+            return "/";
+        }
+
+        if (pathOnly.Length > 1)
+        {
+            pathOnly = pathOnly.TrimEnd('/');
+        }
+
+        return pathOnly;
     }
 
     private static async Task<HttpRequest?> ReadRequestAsync(NetworkStream stream, CancellationToken cancellationToken)
@@ -169,4 +198,3 @@ public static class McpHttpRunner
 
     private sealed record HttpRequest(string Method, string Path, string Body);
 }
-
