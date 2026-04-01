@@ -119,6 +119,20 @@ public sealed class McpServer
 
     public static McpServer CreateDefault(McpServerOptions options)
     {
+        // Load default swagger URL from appsettings.json if not set
+        if (string.IsNullOrWhiteSpace(options.DefaultSwaggerUrl))
+        {
+            var configPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+            if (File.Exists(configPath))
+            {
+                using var stream = File.OpenRead(configPath);
+                using var doc = JsonDocument.Parse(stream);
+                if (doc.RootElement.TryGetProperty("DefaultSwaggerUrl", out var urlProp))
+                {
+                    options = options with { DefaultSwaggerUrl = urlProp.GetString() };
+                }
+            }
+        }
         return new McpServer(
             options,
             new SwaggerDocumentLoader(),
@@ -466,6 +480,39 @@ public sealed class McpServer
             var orchestrator = new ApiAgentOrchestrator(_swaggerDocumentLoader, planner, executor);
             var result = await orchestrator.ExecuteAsync(catalog, new UseCaseRequest(goal), cancellationToken).ConfigureAwait(false);
 
+            // Spara lyckade use_cases automatiskt
+            if (result.Results.All(r => r.Succeeded))
+            {
+                var dir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "logs", "successful_usecases");
+                Directory.CreateDirectory(dir);
+                var fileName = $"{DateTime.UtcNow:yyyyMMdd_HHmmss}_{SanitizeFileName(result.Plan.Name)}.json";
+                var filePath = Path.Combine(dir, fileName);
+                var prettyJsonOptions = new System.Text.Json.JsonSerializerOptions(JsonOptions)
+                {
+                    WriteIndented = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+                File.WriteAllText(filePath, System.Text.Json.JsonSerializer.Serialize(result, prettyJsonOptions));
+            }
+            // Möjlighet att spara misslyckade som change request
+            else if (arguments.TryGetValue("saveAsChangeRequest", out var saveChangeReq) && saveChangeReq == "true")
+            {
+                var dir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "logs", "change_requests");
+                Directory.CreateDirectory(dir);
+                var fileName = $"{DateTime.UtcNow:yyyyMMdd_HHmmss}_{SanitizeFileName(result.Plan.Name)}.json";
+                var filePath = Path.Combine(dir, fileName);
+                var changeRequest = new {
+                    Plan = result.Plan,
+                    Results = result.Results,
+                    Comment = arguments.TryGetValue("changeRequestComment", out var comment) ? comment : null
+                };
+                var prettyJsonOptions = new System.Text.Json.JsonSerializerOptions(JsonOptions)
+                {
+                    WriteIndented = true
+                };
+                File.WriteAllText(filePath, System.Text.Json.JsonSerializer.Serialize(changeRequest, prettyJsonOptions));
+            }
+
             return CreateToolResult(
                 $"Executed plan '{result.Plan.Name}' with {result.Results.Count} result(s).",
                 new
@@ -495,6 +542,14 @@ public sealed class McpServer
         finally
         {
             ephemeralHttpClient?.Dispose();
+        }
+
+        // Hjälpmetod för filnamn
+        static string SanitizeFileName(string name)
+        {
+            foreach (var c in Path.GetInvalidFileNameChars())
+                name = name.Replace(c, '_');
+            return name;
         }
     }
 
@@ -642,7 +697,7 @@ public sealed class McpServer
             return new Uri(swaggerUri.GetLeftPart(UriPartial.Authority), UriKind.Absolute);
         }
 
-        throw new InvalidOperationException("Specify apiBaseUrl either on the tool call or when launching the server.");
+        throw new InvalidOperationException("Specify apiBaseUrl either on the tool call or when launching the server (use --api-base-url when starting MCP, especially with --swagger-file).");
     }
 
     private string ResolveUserId(IReadOnlyDictionary<string, string?> arguments)

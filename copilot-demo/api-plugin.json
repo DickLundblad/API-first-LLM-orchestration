@@ -10,7 +10,7 @@
         "type": "None"
       },
       "spec": {
-        "url": "https://REPLACE_WITH_TUNNEL_HOST/openapi.json",
+        "url": "http://localhost:5000/api/swagger.json",
         "progress_style": "ShowUsageWithInputAndOutput"
       }
     }

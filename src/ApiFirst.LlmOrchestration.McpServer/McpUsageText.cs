@@ -23,5 +23,6 @@ MCP tools:
   run_use_case
 
 The server speaks MCP over stdio, or via the tiny HTTP wrapper when --http-prefix is set.
+If you start with --swagger-file, also provide --api-base-url (or pass apiBaseUrl per tool call).
 """;
 }
