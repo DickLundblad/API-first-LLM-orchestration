@@ -8,9 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="ApiFirst.LlmOrchestration">
-      <HintPath>..\ApiFirst.LlmOrchestration\bin\Debug\net8.0\ApiFirst.LlmOrchestration.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
+    <ProjectReference Include="..\ApiFirst.LlmOrchestration\ApiFirst.LlmOrchestration.csproj" />
   </ItemGroup>
 </Project>
