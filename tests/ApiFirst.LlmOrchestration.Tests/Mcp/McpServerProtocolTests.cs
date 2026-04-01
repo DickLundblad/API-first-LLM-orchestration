@@ -2,6 +2,7 @@ using System.Text.Json;
 using ApiFirst.LlmOrchestration.McpServer;
 using ApiFirst.LlmOrchestration.Tests;
 using NUnit.Framework;
+using McpServerType = ApiFirst.LlmOrchestration.McpServer.McpServer;
 
 namespace ApiFirst.LlmOrchestration.Tests.Mcp;
 
@@ -10,7 +11,7 @@ public sealed class McpServerProtocolTests
     [Test]
     public async Task Initialize_and_tools_list_return_mcp_shapes()
     {
-        var server = McpServer.CreateDefault(new McpServerOptions(false, null, null, null, null, null));
+        var server = McpServerType.CreateDefault(new McpServerOptions(false, null, null, null, null, null));
         var output = await RunAsync(server, CreateInitializeMessage() + Environment.NewLine + CreateToolsListMessage()).ConfigureAwait(false);
         var responses = ParseResponses(output);
 
@@ -28,7 +29,7 @@ public sealed class McpServerProtocolTests
     [Test]
     public async Task Tools_call_health_returns_ok()
     {
-        var server = McpServer.CreateDefault(new McpServerOptions(false, null, null, null, null, null));
+        var server = McpServerType.CreateDefault(new McpServerOptions(false, null, null, null, null, null));
         var input = JsonSerializer.Serialize(new
         {
             jsonrpc = "2.0",
@@ -85,7 +86,7 @@ public sealed class McpServerProtocolTests
 
         try
         {
-            var server = McpServer.CreateDefault(new McpServerOptions(false, null, null, null, null, null));
+            var server = McpServerType.CreateDefault(new McpServerOptions(false, null, null, null, null, null));
             var input = JsonSerializer.Serialize(new
             {
                 jsonrpc = "2.0",
@@ -144,7 +145,7 @@ public sealed class McpServerProtocolTests
 
         try
         {
-            var server = McpServer.CreateDefault(new McpServerOptions(false, null, null, null, null, null));
+            var server = McpServerType.CreateDefault(new McpServerOptions(false, null, null, null, null, null));
             var input = JsonSerializer.Serialize(new
             {
                 jsonrpc = "2.0",
@@ -200,7 +201,7 @@ public sealed class McpServerProtocolTests
         });
     }
 
-    private static async Task<string> RunAsync(McpServer server, string input)
+    private static async Task<string> RunAsync(McpServerType server, string input)
     {
         var reader = new StringReader(input);
         var writer = new StringWriter();
