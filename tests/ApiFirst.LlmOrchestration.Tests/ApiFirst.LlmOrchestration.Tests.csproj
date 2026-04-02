@@ -13,9 +13,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ApiFirst.LlmOrchestration\ApiFirst.LlmOrchestration.csproj" />
-    <ProjectReference Include="..\..\src\ApiFirst.LlmOrchestration.Cli\ApiFirst.LlmOrchestration.Cli.csproj" />
-    <ProjectReference Include="..\..\src\ApiFirst.LlmOrchestration.DemoHost\ApiFirst.LlmOrchestration.DemoHost.csproj" />
-    <ProjectReference Include="..\..\src\ApiFirst.LlmOrchestration.McpServer\ApiFirst.LlmOrchestration.McpServer.csproj" />
+    <ProjectReference Include="..\..\src\ApiFirst.LlmOrchestration\ApiFirst.LlmOrchestration.csproj">
+      <SetConfiguration>Configuration=TestDebug</SetConfiguration>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\ApiFirst.LlmOrchestration.Cli\ApiFirst.LlmOrchestration.Cli.csproj">
+      <SetConfiguration>Configuration=TestDebug</SetConfiguration>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\ApiFirst.LlmOrchestration.DemoHost\ApiFirst.LlmOrchestration.DemoHost.csproj">
+      <SetConfiguration>Configuration=TestDebug</SetConfiguration>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\ApiFirst.LlmOrchestration.McpServer\ApiFirst.LlmOrchestration.McpServer.csproj">
+      <SetConfiguration>Configuration=TestDebug</SetConfiguration>
+    </ProjectReference>
   </ItemGroup>
 </Project>
