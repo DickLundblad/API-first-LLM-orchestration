@@ -487,12 +487,13 @@ public sealed class McpServer
                 Directory.CreateDirectory(dir);
                 var fileName = $"{DateTime.UtcNow:yyyyMMdd_HHmmss}_{SanitizeFileName(result.Plan.Name)}.json";
                 var filePath = Path.Combine(dir, fileName);
+                var serializableResult = ToSerializableResult(result);
                 var prettyJsonOptions = new System.Text.Json.JsonSerializerOptions(JsonOptions)
                 {
                     WriteIndented = true,
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
-                File.WriteAllText(filePath, System.Text.Json.JsonSerializer.Serialize(result, prettyJsonOptions));
+                File.WriteAllText(filePath, System.Text.Json.JsonSerializer.Serialize(serializableResult, prettyJsonOptions));
             }
             // Möjlighet att spara misslyckade som change request
             else if (arguments.TryGetValue("saveAsChangeRequest", out var saveChangeReq) && saveChangeReq == "true")
@@ -503,7 +504,13 @@ public sealed class McpServer
                 var filePath = Path.Combine(dir, fileName);
                 var changeRequest = new {
                     Plan = result.Plan,
-                    Results = result.Results,
+                    Results = result.Results.Select(item => new
+                    {
+                        item.OperationId,
+                        item.Succeeded,
+                        StatusCode = item.StatusCode.HasValue ? (int?)item.StatusCode.Value : null,
+                        ResponseBody = ParseResponseBody(item.ResponseBody)
+                    }).ToArray(),
                     Comment = arguments.TryGetValue("changeRequestComment", out var comment) ? comment : null
                 };
                 var prettyJsonOptions = new System.Text.Json.JsonSerializerOptions(JsonOptions)
@@ -550,6 +557,40 @@ public sealed class McpServer
             foreach (var c in Path.GetInvalidFileNameChars())
                 name = name.Replace(c, '_');
             return name;
+        }
+
+        static object ToSerializableResult(UseCaseExecutionResult result)
+        {
+            return new
+            {
+                result.Plan,
+                Results = result.Results.Select(item => new
+                {
+                    item.OperationId,
+                    item.Succeeded,
+                    StatusCode = item.StatusCode.HasValue ? (int?)item.StatusCode.Value : null,
+                    ResponseBody = ParseResponseBody(item.ResponseBody)
+                }).ToArray()
+            };
+        }
+
+        static object? ParseResponseBody(string? responseBody)
+        {
+            if (string.IsNullOrWhiteSpace(responseBody))
+            {
+                return responseBody;
+            }
+
+            try
+            {
+                using var document = JsonDocument.Parse(responseBody);
+                return document.RootElement.Clone();
+            }
+            catch (JsonException)
+            {
+                // Keep non-JSON payloads as raw text.
+                return responseBody;
+            }
         }
     }
 
