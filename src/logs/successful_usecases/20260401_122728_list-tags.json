@@ -1,0 +1,42 @@
+﻿{
+    "plan":  {
+                 "name":  "list-tags",
+                 "rationale":  "confirm created tags",
+                 "actions":  [
+                                 {
+                                     "operationId":  "GetTags",
+                                     "arguments":  {
+
+                                                   },
+                                     "requestBodyJson":  null
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "GetTags",
+                        "succeeded":  true,
+                        "statusCode":  200,
+                        "responseBody":  {
+                                             "data":  [
+                                                          {
+                                                              "id":  1,
+                                                              "isApproved":  true,
+                                                              "name":  "ai"
+                                                          },
+                                                          {
+                                                              "id":  2,
+                                                              "isApproved":  true,
+                                                              "name":  "copilot"
+                                                          },
+                                                          {
+                                                              "id":  3,
+                                                              "isApproved":  true,
+                                                              "name":  "prompting"
+                                                          }
+                                                      ],
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

@@ -1,0 +1,49 @@
+﻿{
+    "plan":  {
+                 "name":  "verify-anna",
+                 "rationale":  "read back profile",
+                 "actions":  [
+                                 {
+                                     "operationId":  "GetTeamMemberId",
+                                     "arguments":  {
+                                                       "member_id":  "32"
+                                                   },
+                                     "requestBodyJson":  null
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "GetTeamMemberId",
+                        "succeeded":  true,
+                        "statusCode":  200,
+                        "responseBody":  {
+                                             "data":  {
+                                                          "active":  true,
+                                                          "bio":  null,
+                                                          "createdBy":  null,
+                                                          "currentClient":  null,
+                                                          "customerFeedback":  null,
+                                                          "endDate":  null,
+                                                          "hourlyRate":  null,
+                                                          "hourlyRateCurrency":  "SEK",
+                                                          "id":  32,
+                                                          "is_admin":  false,
+                                                          "jobTitle":  "Business Analyst",
+                                                          "linkedinUrl":  null,
+                                                          "location":  null,
+                                                          "managerId":  null,
+                                                          "name":  "Anna Fischer",
+                                                          "profilePicture":  "/static/img/dev-avatar-26.jpg",
+                                                          "role":  "consultant",
+                                                          "saleMotivation":  null,
+                                                          "sawa":  null,
+                                                          "updatedBy":  1,
+                                                          "userId":  33
+                                                      },
+                                             "status":  "success",
+                                             "timestamp":  "2026-04-01T11:11:20.836469"
+                                         }
+                    }
+                ]
+}

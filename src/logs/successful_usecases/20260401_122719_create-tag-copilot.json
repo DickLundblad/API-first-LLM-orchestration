@@ -1,0 +1,30 @@
+﻿{
+    "plan":  {
+                 "name":  "create-tag-copilot",
+                 "rationale":  "required tag",
+                 "actions":  [
+                                 {
+                                     "operationId":  "PostTags",
+                                     "arguments":  {
+
+                                                   },
+                                     "requestBodyJson":  "{\"name\":\"CoPilot\"}"
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "PostTags",
+                        "succeeded":  true,
+                        "statusCode":  201,
+                        "responseBody":  {
+                                             "data":  {
+                                                          "id":  2,
+                                                          "isApproved":  true,
+                                                          "name":  "copilot"
+                                                      },
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

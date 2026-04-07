@@ -1,0 +1,36 @@
+{
+  "plan": {
+    "name": "Add Course From LinkedIn Learning URL",
+    "rationale": "Run existing use case flow with a different URL",
+    "actions": [
+      {
+        "operationId": "PostCourses",
+        "arguments": {},
+        "requestBodyJson": "{\"name\":\"Advanced C# Programming Concepts\",\"description\":\"LinkedIn Learning course import via existing use case flow\",\"url\":\"https://www.linkedin.com/learning/advanced-c-sharp-programming-concepts\",\"provider\":\"LinkedIn Learning\"}"
+      }
+    ]
+  },
+  "results": [
+    {
+      "operationId": "PostCourses",
+      "succeeded": true,
+      "statusCode": 201,
+      "responseBody": {
+        "data": {
+          "createdAt": "2026-04-07T12:02:09.938995",
+          "difficulty": null,
+          "duration": null,
+          "id": 2,
+          "isApproved": true,
+          "isArchived": false,
+          "name": "Advanced C# Programming Concepts",
+          "provider": "LinkedIn Learning",
+          "tags": [],
+          "url": "https://www.linkedin.com/learning/advanced-c-sharp-programming-concepts"
+        },
+        "message": "Course created",
+        "status": "success"
+      }
+    }
+  ]
+}

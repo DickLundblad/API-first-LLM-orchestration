@@ -1,0 +1,24 @@
+{
+  "plan": {
+    "name": "Providers",
+    "rationale": "Usecase step",
+    "actions": [
+      {
+        "operationId": "GetCoursesProviders",
+        "arguments": {},
+        "requestBodyJson": null
+      }
+    ]
+  },
+  "results": [
+    {
+      "operationId": "GetCoursesProviders",
+      "succeeded": true,
+      "statusCode": 200,
+      "responseBody": {
+        "data": [],
+        "status": "success"
+      }
+    }
+  ]
+}

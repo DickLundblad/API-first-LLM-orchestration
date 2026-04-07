@@ -1,0 +1,39 @@
+﻿{
+    "plan":  {
+                 "name":  "set-course-tags",
+                 "rationale":  "assign required tags",
+                 "actions":  [
+                                 {
+                                     "operationId":  "PatchCoursesCourseId",
+                                     "arguments":  {
+                                                       "course_id":  "1"
+                                                   },
+                                     "requestBodyJson":  "{\"tags\":[\"ai\",\"copilot\",\"prompting\"]}"
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "PatchCoursesCourseId",
+                        "succeeded":  true,
+                        "statusCode":  200,
+                        "responseBody":  {
+                                             "data":  {
+                                                          "createdAt":  "2026-04-01T12:21:09.276784",
+                                                          "difficulty":  null,
+                                                          "duration":  null,
+                                                          "id":  1,
+                                                          "isApproved":  true,
+                                                          "isArchived":  false,
+                                                          "name":  "AI Pair Programming with GitHub Copilot",
+                                                          "provider":  "LinkedIn Learning",
+                                                          "tags":  [
+
+                                                                   ],
+                                                          "url":  "https://www.linkedin.com/learning/ai-pair-programming-with-github-copilot-25302433/github-copilot-and-the-genai-revolution"
+                                                      },
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

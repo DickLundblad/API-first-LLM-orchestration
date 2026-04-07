@@ -1,0 +1,38 @@
+﻿{
+    "plan":  {
+                 "name":  "enroll-in_progress",
+                 "rationale":  "status probe",
+                 "actions":  [
+                                 {
+                                     "operationId":  "PostConsultantsConsultantIdCourses",
+                                     "arguments":  {
+                                                       "consultant_id":  "10"
+                                                   },
+                                     "requestBodyJson":  "{\"status\":\"in_progress\",\"courseId\":1}"
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "PostConsultantsConsultantIdCourses",
+                        "succeeded":  true,
+                        "statusCode":  201,
+                        "responseBody":  {
+                                             "data":  {
+                                                          "consultantActive":  true,
+                                                          "consultantId":  10,
+                                                          "consultantName":  "Benjamin Cooper",
+                                                          "consultantProfilePicture":  "/static/img/dev-avatar-5.jpg",
+                                                          "courseId":  1,
+                                                          "createdAt":  "2026-04-01T13:02:19.349804",
+                                                          "id":  1,
+                                                          "review":  null,
+                                                          "reviewAnonymized":  false,
+                                                          "status":  "in_progress",
+                                                          "updatedAt":  "2026-04-01T13:02:19.349811"
+                                                      },
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

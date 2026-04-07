@@ -1,0 +1,42 @@
+﻿{
+    "plan":  {
+                 "name":  "get-course",
+                 "rationale":  "verify target course id",
+                 "actions":  [
+                                 {
+                                     "operationId":  "GetCoursesCourseId",
+                                     "arguments":  {
+                                                       "course_id":  "1"
+                                                   },
+                                     "requestBodyJson":  null
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "GetCoursesCourseId",
+                        "succeeded":  true,
+                        "statusCode":  200,
+                        "responseBody":  {
+                                             "data":  {
+                                                          "createdAt":  "2026-04-01T12:21:09.276784",
+                                                          "difficulty":  null,
+                                                          "duration":  null,
+                                                          "enrolments":  [
+
+                                                                         ],
+                                                          "id":  1,
+                                                          "isApproved":  true,
+                                                          "isArchived":  false,
+                                                          "name":  "AI Pair Programming with GitHub Copilot",
+                                                          "provider":  "LinkedIn Learning",
+                                                          "tags":  [
+
+                                                                   ],
+                                                          "url":  "https://www.linkedin.com/learning/ai-pair-programming-with-github-copilot-25302433/github-copilot-and-the-genai-revolution"
+                                                      },
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

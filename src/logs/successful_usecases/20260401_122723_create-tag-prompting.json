@@ -1,0 +1,30 @@
+﻿{
+    "plan":  {
+                 "name":  "create-tag-prompting",
+                 "rationale":  "required tag",
+                 "actions":  [
+                                 {
+                                     "operationId":  "PostTags",
+                                     "arguments":  {
+
+                                                   },
+                                     "requestBodyJson":  "{\"name\":\"prompting\"}"
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "PostTags",
+                        "succeeded":  true,
+                        "statusCode":  201,
+                        "responseBody":  {
+                                             "data":  {
+                                                          "id":  3,
+                                                          "isApproved":  true,
+                                                          "name":  "prompting"
+                                                      },
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

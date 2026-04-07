@@ -1,0 +1,40 @@
+﻿{
+    "plan":  {
+                 "name":  "create-linkedin-course",
+                 "rationale":  "post user provided course",
+                 "actions":  [
+                                 {
+                                     "operationId":  "PostCourses",
+                                     "arguments":  {
+
+                                                   },
+                                     "requestBodyJson":  "{\"name\":\"AI Pair Programming with GitHub Copilot\",\"description\":\"GitHub Copilot and the GenAI revolution\",\"url\":\"https://www.linkedin.com/learning/ai-pair-programming-with-github-copilot-25302433/github-copilot-and-the-genai-revolution\",\"provider\":\"LinkedIn Learning\"}"
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "PostCourses",
+                        "succeeded":  true,
+                        "statusCode":  201,
+                        "responseBody":  {
+                                             "data":  {
+                                                          "createdAt":  "2026-04-01T12:21:09.276784",
+                                                          "difficulty":  null,
+                                                          "duration":  null,
+                                                          "id":  1,
+                                                          "isApproved":  true,
+                                                          "isArchived":  false,
+                                                          "name":  "AI Pair Programming with GitHub Copilot",
+                                                          "provider":  "LinkedIn Learning",
+                                                          "tags":  [
+
+                                                                   ],
+                                                          "url":  "https://www.linkedin.com/learning/ai-pair-programming-with-github-copilot-25302433/github-copilot-and-the-genai-revolution"
+                                                      },
+                                             "message":  "Course created",
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

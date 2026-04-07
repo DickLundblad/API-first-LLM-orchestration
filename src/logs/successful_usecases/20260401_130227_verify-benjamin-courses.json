@@ -1,0 +1,59 @@
+﻿{
+    "plan":  {
+                 "name":  "verify-benjamin-courses",
+                 "rationale":  "confirm assignment",
+                 "actions":  [
+                                 {
+                                     "operationId":  "GetConsultantsConsultantIdCourses",
+                                     "arguments":  {
+                                                       "consultant_id":  "10"
+                                                   },
+                                     "requestBodyJson":  null
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "GetConsultantsConsultantIdCourses",
+                        "succeeded":  true,
+                        "statusCode":  200,
+                        "responseBody":  {
+                                             "data":  [
+                                                          {
+                                                              "consultantActive":  true,
+                                                              "consultantId":  10,
+                                                              "consultantName":  "Benjamin Cooper",
+                                                              "consultantProfilePicture":  "/static/img/dev-avatar-5.jpg",
+                                                              "courseId":  1,
+                                                              "courseName":  "AI Pair Programming with GitHub Copilot",
+                                                              "courseUrl":  "https://www.linkedin.com/learning/ai-pair-programming-with-github-copilot-25302433/github-copilot-and-the-genai-revolution",
+                                                              "createdAt":  "2026-04-01T13:02:19.349804",
+                                                              "id":  1,
+                                                              "review":  null,
+                                                              "reviewAnonymized":  false,
+                                                              "status":  "in_progress",
+                                                              "tags":  [
+                                                                           {
+                                                                               "id":  1,
+                                                                               "isApproved":  true,
+                                                                               "name":  "ai"
+                                                                           },
+                                                                           {
+                                                                               "id":  2,
+                                                                               "isApproved":  true,
+                                                                               "name":  "copilot"
+                                                                           },
+                                                                           {
+                                                                               "id":  3,
+                                                                               "isApproved":  true,
+                                                                               "name":  "prompting"
+                                                                           }
+                                                                       ],
+                                                              "updatedAt":  "2026-04-01T13:02:19.349811"
+                                                          }
+                                                      ],
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

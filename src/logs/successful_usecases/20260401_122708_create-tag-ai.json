@@ -1,0 +1,30 @@
+﻿{
+    "plan":  {
+                 "name":  "create-tag-ai",
+                 "rationale":  "required tag",
+                 "actions":  [
+                                 {
+                                     "operationId":  "PostTags",
+                                     "arguments":  {
+
+                                                   },
+                                     "requestBodyJson":  "{\"name\":\"AI\"}"
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "PostTags",
+                        "succeeded":  true,
+                        "statusCode":  201,
+                        "responseBody":  {
+                                             "data":  {
+                                                          "id":  1,
+                                                          "isApproved":  true,
+                                                          "name":  "ai"
+                                                      },
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

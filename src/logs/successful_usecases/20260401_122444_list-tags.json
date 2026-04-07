@@ -1,0 +1,28 @@
+﻿{
+    "plan":  {
+                 "name":  "list-tags",
+                 "rationale":  "find existing tags",
+                 "actions":  [
+                                 {
+                                     "operationId":  "GetTags",
+                                     "arguments":  {
+
+                                                   },
+                                     "requestBodyJson":  null
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "GetTags",
+                        "succeeded":  true,
+                        "statusCode":  200,
+                        "responseBody":  {
+                                             "data":  [
+
+                                                      ],
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

@@ -1,0 +1,75 @@
+{
+  "plan": {
+    "name": "List courses",
+    "rationale": "Verify course appears in catalog",
+    "actions": [
+      {
+        "operationId": "GetCourses",
+        "arguments": {},
+        "requestBodyJson": null
+      }
+    ]
+  },
+  "results": [
+    {
+      "operationId": "GetCourses",
+      "succeeded": true,
+      "statusCode": 200,
+      "responseBody": {
+        "data": {
+          "courses": [
+            {
+              "createdAt": "2026-04-01T12:21:09.276784",
+              "difficulty": null,
+              "duration": null,
+              "id": 1,
+              "isApproved": true,
+              "isArchived": false,
+              "name": "AI Pair Programming with GitHub Copilot",
+              "provider": "LinkedIn Learning",
+              "tags": [
+                {
+                  "id": 1,
+                  "isApproved": true,
+                  "name": "ai"
+                },
+                {
+                  "id": 2,
+                  "isApproved": true,
+                  "name": "copilot"
+                },
+                {
+                  "id": 3,
+                  "isApproved": true,
+                  "name": "prompting"
+                }
+              ],
+              "url": "https://www.linkedin.com/learning/ai-pair-programming-with-github-copilot-25302433/github-copilot-and-the-genai-revolution"
+            },
+            {
+              "createdAt": "2026-04-07T12:02:09.938995",
+              "difficulty": null,
+              "duration": null,
+              "id": 2,
+              "isApproved": true,
+              "isArchived": false,
+              "name": "Advanced C# Programming Concepts",
+              "provider": "LinkedIn Learning",
+              "tags": [],
+              "url": "https://www.linkedin.com/learning/advanced-c-sharp-programming-concepts"
+            }
+          ],
+          "pagination": {
+            "hasNext": false,
+            "hasPrev": false,
+            "page": 1,
+            "pages": 1,
+            "perPage": 50,
+            "total": 2
+          }
+        },
+        "status": "success"
+      }
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "plan": {
+    "name": "List courses",
+    "rationale": "Need to find target course by exact URL before archive",
+    "actions": [
+      {
+        "operationId": "GetCourses",
+        "arguments": {},
+        "requestBodyJson": null
+      }
+    ]
+  },
+  "results": [
+    {
+      "operationId": "GetCourses",
+      "succeeded": true,
+      "statusCode": 200,
+      "responseBody": {
+        "data": {
+          "courses": [
+            {
+              "createdAt": "2026-04-01T12:21:09.276784",
+              "difficulty": null,
+              "duration": null,
+              "id": 1,
+              "isApproved": true,
+              "isArchived": false,
+              "name": "AI Pair Programming with GitHub Copilot",
+              "provider": "LinkedIn Learning",
+              "tags": [
+                {
+                  "id": 1,
+                  "isApproved": true,
+                  "name": "ai"
+                },
+                {
+                  "id": 2,
+                  "isApproved": true,
+                  "name": "copilot"
+                },
+                {
+                  "id": 3,
+                  "isApproved": true,
+                  "name": "prompting"
+                }
+              ],
+              "url": "https://www.linkedin.com/learning/ai-pair-programming-with-github-copilot-25302433/github-copilot-and-the-genai-revolution"
+            }
+          ],
+          "pagination": {
+            "hasNext": false,
+            "hasPrev": false,
+            "page": 1,
+            "pages": 1,
+            "perPage": 50,
+            "total": 1
+          }
+        },
+        "status": "success"
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+﻿{
+    "plan":  {
+                 "name":  "c11",
+                 "rationale":  "id mapping",
+                 "actions":  [
+                                 {
+                                     "operationId":  "GetConsultantsConsultantIdCourses",
+                                     "arguments":  {
+                                                       "consultant_id":  "11"
+                                                   },
+                                     "requestBodyJson":  null
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "GetConsultantsConsultantIdCourses",
+                        "succeeded":  true,
+                        "statusCode":  200,
+                        "responseBody":  {
+                                             "data":  [
+
+                                                      ],
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}

@@ -1,0 +1,50 @@
+﻿{
+    "plan":  {
+                 "name":  "set-sale-motivation",
+                 "rationale":  "update saleMotivation",
+                 "actions":  [
+                                 {
+                                     "operationId":  "PutTeamMemberId",
+                                     "arguments":  {
+                                                       "member_id":  "32"
+                                                   },
+                                     "requestBodyJson":  "{\"saleMotivation\":\"Extrovert Backend developer\"}"
+                                 }
+                             ]
+             },
+    "results":  [
+                    {
+                        "operationId":  "PutTeamMemberId",
+                        "succeeded":  true,
+                        "statusCode":  200,
+                        "responseBody":  {
+                                             "data":  {
+                                                          "active":  true,
+                                                          "bio":  null,
+                                                          "createdBy":  null,
+                                                          "currentClient":  null,
+                                                          "customerFeedback":  null,
+                                                          "endDate":  null,
+                                                          "hourlyRate":  null,
+                                                          "hourlyRateCurrency":  "SEK",
+                                                          "id":  32,
+                                                          "is_admin":  false,
+                                                          "jobTitle":  "Business Analyst",
+                                                          "linkedinUrl":  null,
+                                                          "location":  null,
+                                                          "managerId":  null,
+                                                          "name":  "Anna Fischer",
+                                                          "profilePicture":  "/static/img/dev-avatar-26.jpg",
+                                                          "role":  "consultant",
+                                                          "saleMotivation":  "Extrovert Backend developer",
+                                                          "sawa":  null,
+                                                          "updatedBy":  1,
+                                                          "userId":  33
+                                                      },
+                                             "message":  "Successfully updated Anna Fischer",
+                                             "orphan_count":  24,
+                                             "status":  "success"
+                                         }
+                    }
+                ]
+}
