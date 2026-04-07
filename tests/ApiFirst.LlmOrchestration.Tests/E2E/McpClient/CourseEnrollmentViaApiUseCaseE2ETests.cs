@@ -8,29 +8,25 @@ namespace ApiFirst.LlmOrchestration.Tests.E2E.McpClient;
 [Explicit("Integration test: requires a running InternalAI API and valid credentials.")]
 public sealed class CourseEnrollmentViaApiUseCaseE2ETests
 {
+    private const string LoginEndpoint = "api/auth/login";
+    private const string TeamQueryFilter = "filter=all&includeInactive=true";
+    private const string TeamEndpoint = "api/team?" + TeamQueryFilter;
+    private const string CoursesEndpoint = "api/courses";
+    private const string DefaultMemberName = "Benjamin Cooper";
+    private const string DefaultCourseName = "AI Pair Programming with GitHub Copilot";
+    private const string EnrollmentStatusInProgress = "in_progress";
+    private const string EnrollmentStatusApply = "apply";
+
     private static string BaseUrl => Environment.GetEnvironmentVariable("API_TEST_BASE_URL") ?? "http://localhost:5000";
     private static string Username => Environment.GetEnvironmentVariable("API_TEST_USERNAME") ?? "admin";
     private static string Password => Environment.GetEnvironmentVariable("API_TEST_PASSWORD") ?? "Admin1234!";
 
     public static IEnumerable<TestCaseData> EnrollmentCases()
     {
-        var envMember = Environment.GetEnvironmentVariable("API_TEST_MEMBER_NAME");
-        var envCourse = Environment.GetEnvironmentVariable("API_TEST_COURSE_NAME");
-        var envStatus = Environment.GetEnvironmentVariable("API_TEST_ENROLLMENT_STATUS");
-
-        if (!string.IsNullOrWhiteSpace(envMember)
-            && !string.IsNullOrWhiteSpace(envCourse)
-            && !string.IsNullOrWhiteSpace(envStatus))
-        {
-            yield return new TestCaseData(envMember, envCourse, envStatus)
-                .SetName($"Enroll_{Sanitize(envMember)}_{Sanitize(envCourse)}_{Sanitize(envStatus)}");
-            yield break;
-        }
-
-        yield return new TestCaseData("Benjamin Cooper", "AI Pair Programming with GitHub Copilot", "in_progress")
+        yield return new TestCaseData(DefaultMemberName, DefaultCourseName, EnrollmentStatusInProgress)
             .SetName("Enroll_BenjaminCooper_AiPairProgramming_InProgress");
 
-        yield return new TestCaseData("Benjamin Cooper", "AI Pair Programming with GitHub Copilot", "apply")
+        yield return new TestCaseData(DefaultMemberName, DefaultCourseName, EnrollmentStatusApply)
             .SetName("Enroll_BenjaminCooper_AiPairProgramming_Apply");
     }
 
@@ -38,38 +34,48 @@ public sealed class CourseEnrollmentViaApiUseCaseE2ETests
     [TestCaseSource(nameof(EnrollmentCases))]
     public async Task Enroll_existing_course_for_member_by_name(string memberName, string courseName, string enrollmentStatus)
     {
-        using var handler = new HttpClientHandler
+        using var httpClient = CreateHttpClient();
+        await EnsureAuthenticatedAsync(httpClient);
+
+        var memberId = await ResolveMemberIdAsync(httpClient, memberName);
+        var courseId = await ResolveCourseIdAsync(httpClient, courseName);
+        await EnrollCourseAsync(httpClient, memberId, courseId, enrollmentStatus);
+        await AssertEnrollmentExistsAsync(httpClient, memberId, memberName, courseName);
+    }
+
+    private static HttpClient CreateHttpClient()
+    {
+        var handler = new HttpClientHandler
         {
             UseCookies = true,
             CookieContainer = new CookieContainer(),
             AllowAutoRedirect = true
         };
 
-        using var httpClient = new HttpClient(handler)
+        return new HttpClient(handler)
         {
             BaseAddress = new Uri(BaseUrl.EndsWith("/") ? BaseUrl : BaseUrl + "/", UriKind.Absolute)
         };
+    }
 
-        await EnsureAuthenticatedAsync(httpClient);
-
-        var memberId = await ResolveMemberIdAsync(httpClient, memberName);
-        var courseId = await ResolveCourseIdAsync(httpClient, courseName);
-
-        var enrollResponse = await httpClient.PostAsJsonAsync(
-            $"api/consultants/{memberId}/courses",
-            new
-            {
-                courseId,
-                status = enrollmentStatus
-            });
+    private static async Task EnrollCourseAsync(HttpClient httpClient, int memberId, int courseId, string enrollmentStatus)
+    {
+        var enrollResponse = await httpClient.PostAsJsonAsync(GetConsultantCoursesEndpoint(memberId), new
+        {
+            courseId,
+            status = enrollmentStatus
+        });
 
         if (enrollResponse.StatusCode != HttpStatusCode.Created && enrollResponse.StatusCode != HttpStatusCode.Conflict)
         {
             var errorBody = await enrollResponse.Content.ReadAsStringAsync();
             Assert.Fail($"Enrollment failed with {(int)enrollResponse.StatusCode}: {errorBody}");
         }
+    }
 
-        var verifyResponse = await httpClient.GetAsync($"api/consultants/{memberId}/courses");
+    private static async Task AssertEnrollmentExistsAsync(HttpClient httpClient, int memberId, string memberName, string courseName)
+    {
+        var verifyResponse = await httpClient.GetAsync(GetConsultantCoursesEndpoint(memberId));
         Assert.That(verifyResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
         var verifyBody = await verifyResponse.Content.ReadAsStringAsync();
@@ -87,7 +93,7 @@ public sealed class CourseEnrollmentViaApiUseCaseE2ETests
 
     private static async Task EnsureAuthenticatedAsync(HttpClient httpClient)
     {
-        var loginResponse = await httpClient.PostAsJsonAsync("api/auth/login", new
+        var loginResponse = await httpClient.PostAsJsonAsync(LoginEndpoint, new
         {
             username = Username,
             password = Password
@@ -102,60 +108,56 @@ public sealed class CourseEnrollmentViaApiUseCaseE2ETests
 
     private static async Task<int> ResolveMemberIdAsync(HttpClient httpClient, string memberName)
     {
-        var response = await httpClient.GetAsync("api/team?filter=all&includeInactive=true");
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-
-        var body = await response.Content.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(body);
-
-        var members = doc.RootElement.GetProperty("data");
-
-        foreach (var member in members.EnumerateArray())
-        {
-            if (!member.TryGetProperty("name", out var nameElement))
-            {
-                continue;
-            }
-
-            if (!string.Equals(nameElement.GetString(), memberName, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            return member.GetProperty("id").GetInt32();
-        }
-
-        Assert.Fail($"Could not resolve member id for '{memberName}'.");
-        return -1;
+        var members = await GetTeamMembersAsync(httpClient);
+        return FindIdByName(members, memberName, "member");
     }
 
     private static async Task<int> ResolveCourseIdAsync(HttpClient httpClient, string courseName)
     {
-        var response = await httpClient.GetAsync("api/courses");
+        var response = await httpClient.GetAsync(CoursesEndpoint);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
         var body = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
-
         var courses = doc.RootElement.GetProperty("data").GetProperty("courses");
 
-        foreach (var course in courses.EnumerateArray())
+        return FindIdByName(courses, courseName, "course");
+    }
+
+    private static async Task<JsonElement> GetTeamMembersAsync(HttpClient httpClient)
+    {
+        var response = await httpClient.GetAsync(TeamEndpoint);
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+        var body = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(body);
+        return doc.RootElement.GetProperty("data").Clone();
+    }
+
+    private static int FindIdByName(JsonElement items, string expectedName, string itemKind)
+    {
+        foreach (var item in items.EnumerateArray())
         {
-            if (!course.TryGetProperty("name", out var nameElement))
+            if (!item.TryGetProperty("name", out var nameElement))
             {
                 continue;
             }
 
-            if (!string.Equals(nameElement.GetString(), courseName, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(nameElement.GetString(), expectedName, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            return course.GetProperty("id").GetInt32();
+            return item.GetProperty("id").GetInt32();
         }
 
-        Assert.Fail($"Could not resolve course id for '{courseName}'.");
+        Assert.Fail($"Could not resolve {itemKind} id for '{expectedName}'.");
         return -1;
+    }
+
+    private static string GetConsultantCoursesEndpoint(int memberId)
+    {
+        return $"api/consultants/{memberId}/courses";
     }
 
     private static string Sanitize(string input)
