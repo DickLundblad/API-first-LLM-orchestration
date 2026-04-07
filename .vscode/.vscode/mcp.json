@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"https://aglow-quyen-caustically.ngrok-free.dev ": {
+			"url": "https://aglow-quyen-caustically.ngrok-free.dev",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}
