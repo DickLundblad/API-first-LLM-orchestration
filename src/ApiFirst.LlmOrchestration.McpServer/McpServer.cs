@@ -103,18 +103,21 @@ public sealed class McpServer
     private readonly ISwaggerDocumentLoader _swaggerDocumentLoader;
     private readonly IUserModelSettingsProvider _userModelSettingsProvider;
     private readonly ITextGenerationClientFactory _textGenerationClientFactory;
+    private readonly GuiSupportProvider _guiSupportProvider;
     private readonly ConcurrentDictionary<string, ApiSession> _apiSessions = new(StringComparer.OrdinalIgnoreCase);
 
     private McpServer(
         McpServerOptions options,
         ISwaggerDocumentLoader swaggerDocumentLoader,
         IUserModelSettingsProvider userModelSettingsProvider,
-        ITextGenerationClientFactory textGenerationClientFactory)
+        ITextGenerationClientFactory textGenerationClientFactory,
+        GuiSupportProvider guiSupportProvider)
     {
         _options = options;
         _swaggerDocumentLoader = swaggerDocumentLoader;
         _userModelSettingsProvider = userModelSettingsProvider;
         _textGenerationClientFactory = textGenerationClientFactory;
+        _guiSupportProvider = guiSupportProvider;
     }
 
     public static McpServer CreateDefault(McpServerOptions options)
@@ -137,7 +140,8 @@ public sealed class McpServer
             options,
             new SwaggerDocumentLoader(),
             new EnvironmentUserModelSettingsProvider(),
-            new TextGenerationClientFactory(new HttpClient()));
+            new TextGenerationClientFactory(new HttpClient()),
+            new GuiSupportProvider());
     }
 
     public async Task RunAsync(TextReader input, TextWriter output, TextWriter error, CancellationToken cancellationToken)
@@ -301,13 +305,20 @@ public sealed class McpServer
 
         var matches = catalog.Operations
             .Where(operation => MatchesQuery(operation, query))
-            .Select(operation => new
+            .Select(operation =>
             {
-                operation.OperationId,
-                operation.Method,
-                operation.Path,
-                operation.Summary,
-                operation.Tags
+                var guiSupport = _guiSupportProvider.GetGuiSupport(operation.OperationId);
+                return new
+                {
+                    operation.OperationId,
+                    operation.Method,
+                    operation.Path,
+                    operation.Summary,
+                    operation.Tags,
+                    HasGuiSupport = guiSupport is not null,
+                    GuiRoute = guiSupport?.GuiRoute,
+                    GuiFeature = guiSupport?.GuiFeature
+                };
             })
             .ToArray();
 
@@ -339,22 +350,36 @@ public sealed class McpServer
         var catalog = await LoadCatalogAsync(arguments, cancellationToken).ConfigureAwait(false);
         var text = SwaggerCatalogPrinter.Print(catalog);
 
-        return CreateToolResult(text, new
+        var guiConfig = _guiSupportProvider.Configuration;
+        var guiSummary = guiConfig is not null
+            ? $" GUI available at {guiConfig.GuiBaseUrl} for {catalog.Operations.Count(op => _guiSupportProvider.HasGuiSupport(op.OperationId))} operation(s)."
+            : string.Empty;
+
+        return CreateToolResult(text + guiSummary, new
         {
             catalog.Title,
             catalog.Version,
             catalog.Description,
             catalog.ServerBasePath,
-            Operations = catalog.Operations.Select(operation => new
+            GuiBaseUrl = guiConfig?.GuiBaseUrl,
+            Operations = catalog.Operations.Select(operation =>
             {
-                operation.OperationId,
-                operation.Method,
-                operation.Path,
-                operation.Summary,
-                operation.Tags,
-                operation.HasRequestBody,
-                operation.SecurityRequirements,
-                operation.ResponseStatusCodes
+                var guiSupport = _guiSupportProvider.GetGuiSupport(operation.OperationId);
+                return new
+                {
+                    operation.OperationId,
+                    operation.Method,
+                    operation.Path,
+                    operation.Summary,
+                    operation.Tags,
+                    operation.HasRequestBody,
+                    operation.SecurityRequirements,
+                    operation.ResponseStatusCodes,
+                    HasGuiSupport = guiSupport is not null,
+                    GuiRoute = guiSupport?.GuiRoute,
+                    GuiFeature = guiSupport?.GuiFeature,
+                    GuiDescription = guiSupport?.Description
+                };
             }).ToArray()
         });
     }
@@ -367,6 +392,7 @@ public sealed class McpServer
         var apiBaseUrl = ResolveApiBaseUrl(arguments, swaggerSource);
         var catalog = await LoadCatalogAsync(arguments, cancellationToken).ConfigureAwait(false);
 
+        var wasExplicit = arguments.ContainsKey("loginOperationId") || arguments.ContainsKey("loginPath");
         var operation = ResolveLoginOperation(arguments, catalog);
         var username = Require(arguments, "username");
         var password = Require(arguments, "password");
@@ -393,7 +419,16 @@ public sealed class McpServer
         {
             client.Dispose();
             handler.Dispose();
-            throw new InvalidOperationException($"Login failed ({(int)result.StatusCode.GetValueOrDefault()}). {result.ResponseBody}");
+            var resolvedUrl = new UriBuilder(apiBaseUrl)
+            {
+                Path = string.IsNullOrWhiteSpace(catalog.ServerBasePath) || catalog.ServerBasePath == "/"
+                    ? operation.Path
+                    : catalog.ServerBasePath.TrimEnd('/') + "/" + operation.Path.TrimStart('/')
+            }.Uri;
+            throw new InvalidOperationException(
+                $"Login failed ({(int)result.StatusCode.GetValueOrDefault()}) for {operation.Method} {resolvedUrl}. " +
+                $"Operation: {operation.OperationId}, Server base path: '{catalog.ServerBasePath}', Operation path: '{operation.Path}'. " +
+                $"Response: {result.ResponseBody}");
         }
 
         var session = new ApiSession(client, handler, cookieContainer);
@@ -409,12 +444,17 @@ public sealed class McpServer
 
         var cookieCount = cookieContainer.GetCookies(apiBaseUrl).Count;
 
+        var resolvedMethod = wasExplicit ? "explicit" : "inferred";
         return CreateToolResult(
-            $"Logged in as '{userId}' using operation '{operation.OperationId}'.",
+            $"Logged in as '{userId}' using {resolvedMethod} operation '{operation.OperationId}' ({operation.Method} {operation.Path}).",
             new
             {
                 userId,
                 operationId = operation.OperationId,
+                operationPath = operation.Path,
+                operationMethod = operation.Method,
+                serverBasePath = catalog.ServerBasePath,
+                resolutionMethod = resolvedMethod,
                 statusCode = result.StatusCode.HasValue ? (int?)result.StatusCode.Value : null,
                 cookieCount,
                 responseBody = result.ResponseBody
@@ -615,27 +655,58 @@ public sealed class McpServer
             }
         }
 
+        // Try to infer login operation with prioritized keywords (most specific first)
+        // Priority 1: "login" - most specific
         var inferred = catalog.Operations.FirstOrDefault(operation =>
             operation.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)
             && (Contains(operation.OperationId, "login")
                 || Contains(operation.Summary, "login")
-                || Contains(operation.Path, "login")
-                || Contains(operation.OperationId, "signin")
+                || Contains(operation.Path, "login")));
+
+        // Priority 2: "signin" - alternative term for login
+        inferred ??= catalog.Operations.FirstOrDefault(operation =>
+            operation.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)
+            && (Contains(operation.OperationId, "signin")
                 || Contains(operation.Summary, "signin")
-                || Contains(operation.Path, "signin")
-                || Contains(operation.OperationId, "auth")
-                || Contains(operation.Summary, "auth")
-                || Contains(operation.Path, "auth")
-                || Contains(operation.OperationId, "session")
-                || Contains(operation.Summary, "session")
-                || Contains(operation.Path, "session")));
+                || Contains(operation.Path, "signin")));
+
+        // Priority 3: "authenticate" or "authentication" - more specific than just "auth"
+        inferred ??= catalog.Operations.FirstOrDefault(operation =>
+            operation.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)
+            && (Contains(operation.OperationId, "authenticate")
+                || Contains(operation.Summary, "authenticate")
+                || Contains(operation.Path, "authenticate")));
+
+        // Priority 4: "auth" in path combined with operation context
+        // Only match if path contains "auth" and it's not logout/refresh/etc
+        inferred ??= catalog.Operations.FirstOrDefault(operation =>
+            operation.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)
+            && Contains(operation.Path, "auth")
+            && !Contains(operation.Path, "logout")
+            && !Contains(operation.Path, "refresh")
+            && !Contains(operation.Path, "revoke")
+            && !Contains(operation.Path, "verify")
+            && !Contains(operation.OperationId, "logout")
+            && !Contains(operation.OperationId, "refresh")
+            && !Contains(operation.OperationId, "revoke"));
+
+        // Priority 5: "session" creation operations
+        inferred ??= catalog.Operations.FirstOrDefault(operation =>
+            operation.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)
+            && ((Contains(operation.OperationId, "session") && !Contains(operation.OperationId, "delete"))
+                || (Contains(operation.Summary, "session") && !Contains(operation.Summary, "delete"))
+                || (Contains(operation.Path, "session") && !Contains(operation.Path, "delete"))));
 
         if (inferred is not null)
         {
             return inferred;
         }
 
-        throw new InvalidOperationException("Could not infer login operation. Provide 'loginOperationId' or 'loginPath'.");
+        var postOperations = catalog.Operations.Where(op => op.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)).ToList();
+        var availablePaths = string.Join(", ", postOperations.Select(op => $"'{op.Path}' ({op.OperationId})"));
+        throw new InvalidOperationException(
+            $"Could not infer login operation. Available POST operations: {availablePaths}. " +
+            "Provide 'loginOperationId' or 'loginPath' to specify the login endpoint explicitly.");
     }
 
     private static IReadOnlyDictionary<string, string?> BuildActionArguments(SwaggerOperation operation, IReadOnlyDictionary<string, string?> arguments)

@@ -10,4 +10,10 @@
   <ItemGroup>
     <ProjectReference Include="..\ApiFirst.LlmOrchestration\ApiFirst.LlmOrchestration.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="GuiSupportMappings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

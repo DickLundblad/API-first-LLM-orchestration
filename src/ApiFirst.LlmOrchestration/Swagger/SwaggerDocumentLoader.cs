@@ -133,7 +133,22 @@ public sealed class SwaggerDocumentLoader : ISwaggerDocumentLoader
             return string.Empty;
         }
 
-        return urlElement.GetString();
+        var serverUrl = urlElement.GetString();
+        if (string.IsNullOrWhiteSpace(serverUrl))
+        {
+            return string.Empty;
+        }
+
+        // Extract only the path portion from the server URL
+        // Server URLs can be full URLs (e.g., "http://localhost:5000/api") or just paths (e.g., "/api")
+        if (Uri.TryCreate(serverUrl, UriKind.Absolute, out var absoluteUri))
+        {
+            // It's an absolute URL, extract the path portion
+            return absoluteUri.AbsolutePath;
+        }
+
+        // It's already a relative path, return as-is
+        return serverUrl;
     }
 
     private static string? TryGetInfoString(JsonElement root, string propertyName)

@@ -41,4 +41,86 @@ public sealed class SwaggerDocumentLoaderTests
         Assert.That(operation.Parameters[0].Name, Is.EqualTo("orderId"));
         Assert.That(operation.Parameters[0].Location, Is.EqualTo("path"));
     }
+
+    [Test]
+    public async Task LoadFromFileAsync_extracts_path_from_absolute_server_url()
+    {
+        var swaggerPath = await TestSwaggerFile.CreateAsync("""
+            {
+              "openapi": "3.0.1",
+              "servers": [
+                { "url": "http://localhost:5000/api" }
+              ],
+              "paths": {
+                "/auth/login": {
+                  "post": {
+                    "operationId": "Login",
+                    "summary": "User login"
+                  }
+                }
+              }
+            }
+            """);
+
+        var loader = new SwaggerDocumentLoader();
+
+        var catalog = await loader.LoadFromFileAsync(swaggerPath);
+
+        Assert.That(catalog.ServerBasePath, Is.EqualTo("/api"));
+    }
+
+    [Test]
+    public async Task LoadFromFileAsync_extracts_path_from_absolute_server_url_without_path()
+    {
+        var swaggerPath = await TestSwaggerFile.CreateAsync("""
+            {
+              "openapi": "3.0.1",
+              "servers": [
+                { "url": "http://localhost:5000" }
+              ],
+              "paths": {
+                "/auth/login": {
+                  "post": {
+                    "operationId": "Login",
+                    "summary": "User login"
+                  }
+                }
+              }
+            }
+            """);
+
+        var loader = new SwaggerDocumentLoader();
+
+        var catalog = await loader.LoadFromFileAsync(swaggerPath);
+
+        Assert.That(catalog.ServerBasePath, Is.EqualTo("/"));
+    }
+
+    [Test]
+    public async Task LoadFromFileAsync_handles_relative_server_path()
+    {
+        var swaggerPath = await TestSwaggerFile.CreateAsync("""
+            {
+              "openapi": "3.0.1",
+              "servers": [
+                { "url": "/api/v1" }
+              ],
+              "paths": {
+                "/users": {
+                  "get": {
+                    "operationId": "GetUsers",
+                    "summary": "List users"
+                  }
+                }
+              }
+            }
+            """);
+
+        var loader = new SwaggerDocumentLoader();
+
+        var catalog = await loader.LoadFromFileAsync(swaggerPath);
+
+        Assert.That(catalog.ServerBasePath, Is.EqualTo("/api/v1"));
+    }
 }
+

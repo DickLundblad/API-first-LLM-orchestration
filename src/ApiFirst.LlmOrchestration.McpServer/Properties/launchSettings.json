@@ -1,8 +1,16 @@
 {
   "profiles": {
-    "ApiFirst.LlmOrchestration.McpServer": {
+    "MCP Server (HTTP)": {
       "commandName": "Project",
-      "commandLineArgs": "  --swagger-url http://localhost:5000/api/swagger.json `\r\n  --api-base-url http://localhost:5000 `\r\n  --http-prefix http://localhost:5055"
+      "commandLineArgs": "--swagger-url http://localhost:5000/api/swagger.json --api-base-url http://localhost:5000 --http-prefix http://localhost:5055"
+    },
+    "MCP Server (stdio)": {
+      "commandName": "Project",
+      "commandLineArgs": "--swagger-url http://localhost:5000/api/swagger.json --api-base-url http://localhost:5000"
+    },
+    "MCP Server (local file)": {
+      "commandName": "Project",
+      "commandLineArgs": "--swagger-file ./swagger.json --api-base-url http://localhost:5000 --http-prefix http://localhost:5055"
     }
   }
 }

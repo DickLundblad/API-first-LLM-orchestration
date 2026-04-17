@@ -1,7 +1,7 @@
 {
 	"servers": {
-		"https://aglow-quyen-caustically.ngrok-free.dev ": {
-			"url": "https://aglow-quyen-caustically.ngrok-free.dev",
+		"api-first-llm-orchestration": {
+			"url": "http://localhost:5055/mcp",
 			"type": "http"
 		}
 	},
