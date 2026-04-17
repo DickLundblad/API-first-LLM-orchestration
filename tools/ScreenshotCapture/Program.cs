@@ -137,24 +137,92 @@ class Program
         Console.WriteLine("Logging in...");
         try
         {
-            await page.GotoAsync(GuiBaseUrl + "/login", new() { WaitUntil = WaitUntilState.NetworkIdle });
+            // Navigate to login page (which redirects to home and opens modal)
+            await page.GotoAsync(GuiBaseUrl + "/login", new() { WaitUntil = WaitUntilState.NetworkIdle, Timeout = 15000 });
 
-            // Fill in credentials
-            await page.FillAsync("input[name='username'], input[type='text'], input[placeholder*='username' i]", Username);
-            await page.FillAsync("input[name='password'], input[type='password'], input[placeholder*='password' i]", Password);
+            Console.WriteLine("  Navigated to /login (opens modal)");
 
-            // Click login button
-            await page.ClickAsync("button[type='submit'], button:has-text('Login'), button:has-text('Sign in')");
+            // Wait for the login modal to appear
+            await page.WaitForSelectorAsync("[data-testid='admin-login-modal']", new() { Timeout = 10000, State = WaitForSelectorState.Visible });
+            Console.WriteLine("  Login modal appeared");
 
-            // Wait for navigation after login
-            await page.WaitForURLAsync(url => !url.Contains("/login"), new() { Timeout = 10000 });
+            // Wait a bit for modal animations
+            await page.WaitForTimeoutAsync(500);
 
-            Console.WriteLine("✓ Successfully logged in");
+            // Fill in username using the Input component's underlying input
+            var usernameInput = page.Locator("[data-testid='username-input'] input, input#username");
+            await usernameInput.FillAsync(Username);
+            Console.WriteLine($"  Filled username: {Username}");
+
+            // Fill in password
+            var passwordInput = page.Locator("[data-testid='password-input'] input, input#password");
+            await passwordInput.FillAsync(Password);
+            Console.WriteLine("  Filled password");
+
+            // Click the login button
+            var loginButton = page.Locator("button[data-testid='login-button']");
+            await loginButton.ClickAsync();
+            Console.WriteLine("  Clicked login button");
+
+            // Wait for modal to close (successful login closes the modal)
+            try
+            {
+                await page.WaitForSelectorAsync("[data-testid='admin-login-modal']", new() { 
+                    Timeout = 10000, 
+                    State = WaitForSelectorState.Hidden 
+                });
+                Console.WriteLine("  Login modal closed");
+            }
+            catch
+            {
+                Console.WriteLine("  ⚠ Modal did not close - login may have failed");
+            }
+
+            // Wait for page to settle
+            await page.WaitForTimeoutAsync(2000);
+
+            // Verify we're logged in by checking the URL and looking for auth indicators
+            var currentUrl = page.Url;
+            Console.WriteLine($"  Current URL: {currentUrl}");
+
+            // Look for logout button or user menu to confirm login
+            var isLoggedIn = false;
+            try
+            {
+                // Check for common authenticated UI elements
+                var logoutButton = page.Locator("button:has-text('Logout'), button:has-text('Log out'), a:has-text('Logout')");
+                await logoutButton.WaitForAsync(new() { Timeout = 3000, State = WaitForSelectorState.Visible });
+                isLoggedIn = true;
+                Console.WriteLine("  ✓ Found logout button - user is authenticated");
+            }
+            catch
+            {
+                // Try alternative method - check if login modal can be opened again
+                // (if already logged in, the modal shouldn't appear)
+                Console.WriteLine("  Could not find logout button");
+            }
+
+            if (isLoggedIn)
+            {
+                Console.WriteLine("✓ Successfully logged in and verified");
+            }
+            else
+            {
+                Console.WriteLine("⚠ Could not fully verify login - proceeding anyway");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠ Login attempt failed: {ex.Message}");
-            Console.WriteLine("  Continuing with screenshot capture (some pages may not be accessible)");
+            Console.WriteLine($"⚠ Login process failed: {ex.Message}");
+            Console.WriteLine("  Continuing with screenshot capture");
+            Console.WriteLine();
+            Console.WriteLine("  Troubleshooting:");
+            Console.WriteLine($"  1. Verify credentials are correct: {Username} / {Password}");
+            Console.WriteLine($"  2. Try manual login at {GuiBaseUrl}/login");
+            Console.WriteLine("  3. Check browser console for errors");
+            Console.WriteLine("  4. Set custom credentials:");
+            Console.WriteLine("     $env:INTERNALAI_USERNAME='yourusername'");
+            Console.WriteLine("     $env:INTERNALAI_PASSWORD='yourpassword'");
         }
 
         Console.WriteLine();
