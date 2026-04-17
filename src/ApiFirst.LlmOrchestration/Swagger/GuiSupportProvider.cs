@@ -37,6 +37,10 @@ public sealed class GuiSupportProvider
                 var root = document.RootElement;
 
                 var guiBaseUrl = root.GetProperty("guiBaseUrl").GetString() ?? string.Empty;
+                var screenshotBaseUrl = root.TryGetProperty("screenshotBaseUrl", out var screenshotBaseElement)
+                    ? screenshotBaseElement.GetString()
+                    : null;
+
                 var mappingsArray = root.GetProperty("mappings");
                 var mappings = new List<GuiSupportMapping>();
 
@@ -61,13 +65,23 @@ public sealed class GuiSupportProvider
                         ? notesElement.GetString()
                         : null;
 
+                    var screenshotUrl = item.TryGetProperty("screenshotUrl", out var screenshotElement)
+                        ? screenshotElement.GetString()
+                        : null;
+
+                    var thumbnailUrl = item.TryGetProperty("thumbnailUrl", out var thumbnailElement)
+                        ? thumbnailElement.GetString()
+                        : null;
+
                     var mapping = new GuiSupportMapping(
                         operationId,
                         guiRoute,
                         guiFeature,
                         description,
                         pathParameters,
-                        mappingNotes);
+                        mappingNotes,
+                        screenshotUrl,
+                        thumbnailUrl);
 
                     mappings.Add(mapping);
                     _mappingsByOperationId[operationId] = mapping;
@@ -87,7 +101,7 @@ public sealed class GuiSupportProvider
                     }
                 }
 
-                _configuration = new GuiSupportConfiguration(guiBaseUrl, mappings, notes);
+                _configuration = new GuiSupportConfiguration(guiBaseUrl, mappings, notes, screenshotBaseUrl);
             }
             catch (Exception ex)
             {

@@ -2,12 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Maps API operations to GUI routes/features in the InternalAI frontend",
   "guiBaseUrl": "http://localhost:3000",
+  "screenshotBaseUrl": "https://raw.githubusercontent.com/DickLundblad/API-first-LLM-orchestration/main/docs/screenshots",
   "mappings": [
     {
       "operationId": "GetTeamMembers",
       "guiRoute": "/team",
       "guiFeature": "Team Member List",
-      "description": "View and search all team members in a table view"
+      "description": "View and search all team members in a table view",
+      "screenshotUrl": "team-list.png",
+      "thumbnailUrl": "team-list-thumb.png"
     },
     {
       "operationId": "GetTeamMember",
@@ -16,7 +19,9 @@
       "description": "View and edit individual team member profile details",
       "pathParameters": {
         "id": "memberId"
-      }
+      },
+      "screenshotUrl": "team-detail.png",
+      "thumbnailUrl": "team-detail-thumb.png"
     },
     {
       "operationId": "UpdateTeamMember",
@@ -25,7 +30,9 @@
       "description": "Edit team member profile via the detail page",
       "pathParameters": {
         "id": "memberId"
-      }
+      },
+      "screenshotUrl": "team-detail.png",
+      "thumbnailUrl": "team-detail-thumb.png"
     },
     {
       "operationId": "DeleteTeamMember",
@@ -34,44 +41,58 @@
       "description": "Delete team member from detail page (requires permissions)",
       "pathParameters": {
         "id": "memberId"
-      }
+      },
+      "screenshotUrl": "team-detail.png",
+      "thumbnailUrl": "team-detail-thumb.png"
     },
     {
       "operationId": "GetCourses",
       "guiRoute": "/courses",
       "guiFeature": "Courses List",
-      "description": "View and search all courses with filtering"
+      "description": "View and search all courses with filtering",
+      "screenshotUrl": "courses-list.png",
+      "thumbnailUrl": "courses-list-thumb.png"
     },
     {
       "operationId": "GetCourse",
       "guiRoute": "/courses",
       "guiFeature": "Course Detail View",
       "description": "View course details in the courses page",
-      "notes": "Course details shown in same page, not separate route"
+      "notes": "Course details shown in same page, not separate route",
+      "screenshotUrl": "courses-list.png",
+      "thumbnailUrl": "courses-list-thumb.png"
     },
     {
       "operationId": "UpdateCourse",
       "guiRoute": "/courses",
       "guiFeature": "Course Edit",
-      "description": "Edit course details via the courses page"
+      "description": "Edit course details via the courses page",
+      "screenshotUrl": "courses-list.png",
+      "thumbnailUrl": "courses-list-thumb.png"
     },
     {
       "operationId": "CreateCourse",
       "guiRoute": "/courses",
       "guiFeature": "Course Creation",
-      "description": "Create new course via the courses page"
+      "description": "Create new course via the courses page",
+      "screenshotUrl": "courses-list.png",
+      "thumbnailUrl": "courses-list-thumb.png"
     },
     {
       "operationId": "ApproveCourse",
       "guiRoute": "/courses",
       "guiFeature": "Course Approval",
-      "description": "Approve proposed course (Manager+ only)"
+      "description": "Approve proposed course (Manager+ only)",
+      "screenshotUrl": "courses-list.png",
+      "thumbnailUrl": "courses-list-thumb.png"
     },
     {
       "operationId": "ArchiveCourse",
       "guiRoute": "/courses",
       "guiFeature": "Course Archive Toggle",
-      "description": "Archive or unarchive a course (Manager+ only)"
+      "description": "Archive or unarchive a course (Manager+ only)",
+      "screenshotUrl": "courses-list.png",
+      "thumbnailUrl": "courses-list-thumb.png"
     },
     {
       "operationId": "EnrollCourse",
@@ -80,7 +101,9 @@
       "description": "Enroll team member in courses via their detail page",
       "pathParameters": {
         "id": "consultantId"
-      }
+      },
+      "screenshotUrl": "team-detail.png",
+      "thumbnailUrl": "team-detail-thumb.png"
     },
     {
       "operationId": "GetConsultantCourses",
@@ -89,31 +112,41 @@
       "description": "View team member's enrolled courses on their detail page",
       "pathParameters": {
         "id": "consultantId"
-      }
+      },
+      "screenshotUrl": "team-detail.png",
+      "thumbnailUrl": "team-detail-thumb.png"
     },
     {
       "operationId": "Login",
       "guiRoute": "/login",
       "guiFeature": "User Login",
-      "description": "User authentication page"
+      "description": "User authentication page",
+      "screenshotUrl": "login.png",
+      "thumbnailUrl": "login-thumb.png"
     },
     {
       "operationId": "ForgotPassword",
       "guiRoute": "/forgot-password",
       "guiFeature": "Password Reset Request",
-      "description": "Request password reset email"
+      "description": "Request password reset email",
+      "screenshotUrl": "forgot-password.png",
+      "thumbnailUrl": "forgot-password-thumb.png"
     },
     {
       "operationId": "ResetPassword",
       "guiRoute": "/reset-password",
       "guiFeature": "Password Reset Form",
-      "description": "Reset password with token from email"
+      "description": "Reset password with token from email",
+      "screenshotUrl": "reset-password.png",
+      "thumbnailUrl": "reset-password-thumb.png"
     },
     {
       "operationId": "VerifyEmail",
       "guiRoute": "/verify-email",
       "guiFeature": "Email Verification",
-      "description": "Verify email address with token"
+      "description": "Verify email address with token",
+      "screenshotUrl": "verify-email.png",
+      "thumbnailUrl": "verify-email-thumb.png"
     }
   ],
   "notes": [
@@ -121,6 +154,9 @@
     "Path parameters in curly braces {id} should be replaced with actual values",
     "Some operations share the same GUI route but different features/modals",
     "Operations not listed here have no direct GUI equivalent",
-    "GUI may be available at different URL in production"
+    "GUI may be available at different URL in production",
+    "Screenshot URLs are relative to screenshotBaseUrl",
+    "Thumbnails are typically 300x200px, screenshots are full resolution",
+    "Screenshot files should be placed in this repository under docs/screenshots/"
   ]
 }

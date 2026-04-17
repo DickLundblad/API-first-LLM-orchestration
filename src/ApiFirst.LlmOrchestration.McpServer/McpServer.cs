@@ -59,6 +59,33 @@ public sealed class McpServer
                 }
             }),
         new McpToolDefinition(
+            "preview_gui",
+            "Open a GUI route in the default browser for an operation that has GUI support.",
+            true,
+            new Dictionary<string, object?>
+            {
+                ["type"] = "object",
+                ["required"] = new[] { "operationId" },
+                ["properties"] = new Dictionary<string, object?>
+                {
+                    ["operationId"] = new Dictionary<string, object?> 
+                    { 
+                        ["type"] = "string",
+                        ["description"] = "The operation ID to preview in the GUI"
+                    },
+                    ["parameters"] = new Dictionary<string, object?> 
+                    { 
+                        ["type"] = "object",
+                        ["description"] = "Optional parameters for parameterized routes (e.g., {\"memberId\": \"123\"})"
+                    },
+                    ["openInBrowser"] = new Dictionary<string, object?> 
+                    { 
+                        ["type"] = "boolean",
+                        ["description"] = "Whether to open the URL in the default browser (default: true)"
+                    }
+                }
+            }),
+        new McpToolDefinition(
             "login",
             "Authenticate a user and store a session cookie for later API calls.",
             false,
@@ -287,6 +314,7 @@ public sealed class McpServer
                 "health" => CreateToolResult("ok", new { status = "ok" }),
                 "search_operations" => await SearchOperationsAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "list_operations" => await ListOperationsAsync(arguments, cancellationToken).ConfigureAwait(false),
+                "preview_gui" => await PreviewGuiAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "login" => await LoginAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "run_use_case" => await RunUseCaseAsync(arguments, cancellationToken).ConfigureAwait(false),
                 _ => CreateToolError($"Unknown tool '{toolName}'.")
@@ -317,7 +345,8 @@ public sealed class McpServer
                     operation.Tags,
                     HasGuiSupport = guiSupport is not null,
                     GuiRoute = guiSupport?.GuiRoute,
-                    GuiFeature = guiSupport?.GuiFeature
+                    GuiFeature = guiSupport?.GuiFeature,
+                    ThumbnailUrl = guiSupport?.ThumbnailUrl
                 };
             })
             .ToArray();
@@ -378,10 +407,96 @@ public sealed class McpServer
                     HasGuiSupport = guiSupport is not null,
                     GuiRoute = guiSupport?.GuiRoute,
                     GuiFeature = guiSupport?.GuiFeature,
-                    GuiDescription = guiSupport?.Description
+                    GuiDescription = guiSupport?.Description,
+                    ScreenshotUrl = guiSupport?.ScreenshotUrl,
+                    ThumbnailUrl = guiSupport?.ThumbnailUrl
                 };
             }).ToArray()
         });
+    }
+
+    private async Task<object> PreviewGuiAsync(IReadOnlyDictionary<string, string?> arguments, CancellationToken cancellationToken)
+    {
+        var operationId = Require(arguments, "operationId");
+        var openInBrowser = !arguments.TryGetValue("openInBrowser", out var openFlag) || openFlag != "false";
+
+        // Check if GUI support is available
+        if (_guiSupportProvider.Configuration is null)
+        {
+            return CreateToolError("GUI support is not configured. Please ensure GuiSupportMappings.json exists.");
+        }
+
+        var guiSupport = _guiSupportProvider.GetGuiSupport(operationId);
+        if (guiSupport is null)
+        {
+            var availableOperations = _guiSupportProvider.GetAllMappings()
+                .Select(m => m.OperationId)
+                .Take(10)
+                .ToArray();
+            var suggestions = availableOperations.Length > 0
+                ? $" Available operations with GUI support: {string.Join(", ", availableOperations)}"
+                : " No operations have GUI support configured.";
+
+            return CreateToolError($"Operation '{operationId}' does not have GUI support.{suggestions}");
+        }
+
+        // Parse parameters if provided
+        Dictionary<string, string?>? parameters = null;
+        if (arguments.TryGetValue("parameters", out var parametersJson) && !string.IsNullOrWhiteSpace(parametersJson))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(parametersJson);
+                parameters = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    parameters[prop.Name] = prop.Value.GetString();
+                }
+            }
+            catch (JsonException ex)
+            {
+                return CreateToolError($"Invalid parameters JSON: {ex.Message}");
+            }
+        }
+
+        // Construct the GUI URL
+        var guiUrl = _guiSupportProvider.GetGuiUrl(operationId, parameters);
+        if (guiUrl is null)
+        {
+            return CreateToolError($"Failed to construct GUI URL for operation '{operationId}'.");
+        }
+
+        // Open in browser if requested
+        if (openInBrowser)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = guiUrl,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                return CreateToolError($"Failed to open browser: {ex.Message}. URL: {guiUrl}");
+            }
+        }
+
+        return CreateToolResult(
+            openInBrowser 
+                ? $"Opened GUI for '{guiSupport.GuiFeature}' in browser."
+                : $"GUI URL for '{guiSupport.GuiFeature}': {guiUrl}",
+            new
+            {
+                operationId,
+                guiUrl,
+                guiFeature = guiSupport.GuiFeature,
+                guiRoute = guiSupport.GuiRoute,
+                description = guiSupport.Description,
+                openedInBrowser = openInBrowser,
+                parametersProvided = parameters?.Keys.ToArray() ?? Array.Empty<string>()
+            });
     }
 
 

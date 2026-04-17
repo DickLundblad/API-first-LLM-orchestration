@@ -1,0 +1,34 @@
+{
+  "plan": {
+    "name": "verify-admin-session",
+    "rationale": "Verify that the authenticated admin session is active after login.",
+    "actions": [
+      {
+        "operationId": "GetAuthStatus",
+        "arguments": {},
+        "requestBodyJson": null
+      }
+    ]
+  },
+  "results": [
+    {
+      "operationId": "GetAuthStatus",
+      "succeeded": true,
+      "statusCode": 200,
+      "responseBody": {
+        "isAuthenticated": true,
+        "timestamp": "2026-04-17T13:42:46.657492",
+        "user": {
+          "email": "admin@internal.local",
+          "fullName": "admin",
+          "id": 1,
+          "is_admin": true,
+          "must_reset_password": false,
+          "role": "admin",
+          "team_member_id": null,
+          "username": "admin"
+        }
+      }
+    }
+  ]
+}

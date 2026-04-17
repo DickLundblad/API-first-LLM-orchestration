@@ -9,7 +9,9 @@ public sealed record GuiSupportMapping(
     string GuiFeature,
     string Description,
     IReadOnlyDictionary<string, string>? PathParameters = null,
-    string? Notes = null);
+    string? Notes = null,
+    string? ScreenshotUrl = null,
+    string? ThumbnailUrl = null);
 
 /// <summary>
 /// Represents the complete GUI support configuration including base URL and all mappings.
@@ -17,4 +19,5 @@ public sealed record GuiSupportMapping(
 public sealed record GuiSupportConfiguration(
     string GuiBaseUrl,
     IReadOnlyList<GuiSupportMapping> Mappings,
-    IReadOnlyList<string>? Notes = null);
+    IReadOnlyList<string>? Notes = null,
+    string? ScreenshotBaseUrl = null);

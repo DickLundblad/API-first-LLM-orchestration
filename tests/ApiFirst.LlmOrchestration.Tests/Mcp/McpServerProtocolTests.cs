@@ -18,9 +18,10 @@ public sealed class McpServerProtocolTests
         Assert.That(GetString(responses[0], "result", "protocolVersion"), Is.EqualTo("2024-11-05").Or.EqualTo("2025-03-26").Or.EqualTo("2025-06-18").Or.EqualTo("2025-11-25"));
 
         var tools = GetArray(responses[1], "result", "tools");
-        Assert.That(tools.EnumerateArray().Count(), Is.EqualTo(5));
+        Assert.That(tools.EnumerateArray().Count(), Is.EqualTo(6));
         var toolNames = tools.EnumerateArray().Select(tool => GetString(tool, "name")).ToArray();
         Assert.That(toolNames, Does.Contain("search_operations"));
+        Assert.That(toolNames, Does.Contain("preview_gui"));
         Assert.That(toolNames, Does.Contain("run_use_case"));
         Assert.That(toolNames, Does.Contain("login"));
     }
