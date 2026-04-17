@@ -1,6 +1,6 @@
-using System.Text.Json;
 using ApiFirst.LlmOrchestration.Abstractions;
 using ApiFirst.LlmOrchestration.Models;
+using System.Text.Json;
 
 namespace ApiFirst.LlmOrchestration.Swagger;
 

@@ -1,7 +1,6 @@
-using System.Text.Json;
 using ApiFirst.LlmOrchestration.McpServer;
-using ApiFirst.LlmOrchestration.Tests;
 using NUnit.Framework;
+using System.Text.Json;
 using McpServerType = ApiFirst.LlmOrchestration.McpServer.McpServer;
 
 namespace ApiFirst.LlmOrchestration.Tests.Mcp;

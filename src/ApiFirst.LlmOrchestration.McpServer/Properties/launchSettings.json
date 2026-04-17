@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ApiFirst.LlmOrchestration.McpServer": {
+      "commandName": "Project",
+      "commandLineArgs": "  --swagger-url http://localhost:5000/api/swagger.json `\r\n  --api-base-url http://localhost:5000 `\r\n  --http-prefix http://localhost:5055"
+    }
+  }
+}

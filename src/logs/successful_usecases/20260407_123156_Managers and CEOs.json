@@ -1,0 +1,50 @@
+{
+  "plan": {
+    "name": "Managers and CEOs",
+    "rationale": "Determine whether CEO is part of managers endpoint",
+    "actions": [
+      {
+        "operationId": "GetUsersManagers",
+        "arguments": {},
+        "requestBodyJson": null
+      }
+    ]
+  },
+  "results": [
+    {
+      "operationId": "GetUsersManagers",
+      "succeeded": true,
+      "statusCode": 200,
+      "responseBody": {
+        "count": 3,
+        "managers": [
+          {
+            "id": 1,
+            "jobTitle": "CEO",
+            "name": "Rafael Santos",
+            "role": "ceo",
+            "userId": 2,
+            "username": "rafael.santos"
+          },
+          {
+            "id": 3,
+            "jobTitle": "Manager",
+            "name": "Oliver Chen",
+            "role": "manager",
+            "userId": 4,
+            "username": "oliver.chen"
+          },
+          {
+            "id": 4,
+            "jobTitle": "Manager",
+            "name": "Zara Patel",
+            "role": "manager",
+            "userId": 5,
+            "username": "zara.patel"
+          }
+        ],
+        "success": true
+      }
+    }
+  ]
+}

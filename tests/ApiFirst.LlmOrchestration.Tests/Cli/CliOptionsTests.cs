@@ -1,5 +1,5 @@
-using NUnit.Framework;
 using ApiFirst.LlmOrchestration.Cli;
+using NUnit.Framework;
 
 namespace ApiFirst.LlmOrchestration.Tests.Cli;
 

@@ -1,7 +1,7 @@
-﻿using System.Net;
+﻿using NUnit.Framework;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using NUnit.Framework;
 
 namespace ApiFirst.LlmOrchestration.Tests.E2E.McpClient;
 
@@ -30,7 +30,7 @@ public sealed class CourseEnrollmentViaApiUseCaseE2ETests
             .SetName("Enroll_BenjaminCooper_AiPairProgramming_Apply");
     }
 
-    
+
     [TestCaseSource(nameof(EnrollmentCases))]
     public async Task Enroll_existing_course_for_member_by_name(string memberName, string courseName, string enrollmentStatus)
     {

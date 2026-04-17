@@ -1,6 +1,3 @@
-using System.Collections.Concurrent;
-using System.Net;
-using System.Text.Json;
 using ApiFirst.LlmOrchestration.Abstractions;
 using ApiFirst.LlmOrchestration.Configuration;
 using ApiFirst.LlmOrchestration.Models;
@@ -8,6 +5,9 @@ using ApiFirst.LlmOrchestration.Orchestration;
 using ApiFirst.LlmOrchestration.Planning;
 using ApiFirst.LlmOrchestration.Providers;
 using ApiFirst.LlmOrchestration.Swagger;
+using System.Collections.Concurrent;
+using System.Net;
+using System.Text.Json;
 
 namespace ApiFirst.LlmOrchestration.McpServer;
 
@@ -502,7 +502,8 @@ public sealed class McpServer
                 Directory.CreateDirectory(dir);
                 var fileName = $"{DateTime.UtcNow:yyyyMMdd_HHmmss}_{SanitizeFileName(result.Plan.Name)}.json";
                 var filePath = Path.Combine(dir, fileName);
-                var changeRequest = new {
+                var changeRequest = new
+                {
                     Plan = result.Plan,
                     Results = result.Results.Select(item => new
                     {
