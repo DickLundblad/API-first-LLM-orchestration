@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.5.11709.299 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiFirst.LlmOrchestration", "src\ApiFirst.LlmOrchestration\ApiFirst.LlmOrchestration.csproj", "{D8D2C3B6-4C7B-4A7D-A2A6-1B7A3D2B81A1}"
 EndProject
@@ -11,6 +11,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiFirst.LlmOrchestration.McpServer", "src\ApiFirst.LlmOrchestration.McpServer\ApiFirst.LlmOrchestration.McpServer.csproj", "{E5D8E2A5-7D2E-4A6B-9B0B-1D29F4C8D7B2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiFirst.LlmOrchestration.Tests", "tests\ApiFirst.LlmOrchestration.Tests\ApiFirst.LlmOrchestration.Tests.csproj", "{0B9B1A8F-57B6-46A0-AE4C-4B3B96C0B8E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenshotCapture", "tools\ScreenshotCapture\ScreenshotCapture.csproj", "{E9C0779D-9352-5C54-A489-A2B70A1A32B5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,5 +40,15 @@ Global
 		{0B9B1A8F-57B6-46A0-AE4C-4B3B96C0B8E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B9B1A8F-57B6-46A0-AE4C-4B3B96C0B8E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B9B1A8F-57B6-46A0-AE4C-4B3B96C0B8E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9C0779D-9352-5C54-A489-A2B70A1A32B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9C0779D-9352-5C54-A489-A2B70A1A32B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9C0779D-9352-5C54-A489-A2B70A1A32B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9C0779D-9352-5C54-A489-A2B70A1A32B5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1DC3DCC9-B837-45D2-BE5C-1A09D8BB42AE}
 	EndGlobalSection
 EndGlobal

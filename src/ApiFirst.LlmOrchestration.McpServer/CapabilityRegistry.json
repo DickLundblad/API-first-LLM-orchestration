@@ -1,0 +1,145 @@
+[
+  {
+    "id": "team-member-management",
+    "name": "Team Member Management",
+    "description": "View, edit, and manage team member profiles via API",
+    "category": "Team",
+    "status": "ApiVerified",
+    "apiOperationIds": [
+      "GetTeamMembers",
+      "GetTeamMember",
+      "UpdateTeamMember",
+      "DeleteTeamMember"
+    ],
+    "apiTestIds": [
+      "TeamMemberTests.GetTeamMembers_ReturnsAllMembers",
+      "TeamMemberTests.GetTeamMember_ReturnsSpecificMember",
+      "TeamMemberTests.UpdateTeamMember_UpdatesSuccessfully",
+      "TeamMemberTests.DeleteTeamMember_DeletesSuccessfully"
+    ],
+    "guiRoute": "/team",
+    "guiFeature": "Team Member List & Detail",
+    "guiTestIds": [
+      "TeamMemberUiTests.CanViewTeamMemberList",
+      "TeamMemberUiTests.CanEditTeamMember"
+    ],
+    "backlogItemIds": [
+      "STORY-123"
+    ],
+    "metadata": {
+      "owner": "TeamManagementSquad",
+      "priority": "High",
+      "apiVersion": "v1"
+    },
+    "requiredEvidenceLevel": "ApiTests"
+  },
+  {
+    "id": "course-management",
+    "name": "Course Management",
+    "description": "Create, edit, approve, and archive courses via API",
+    "category": "Courses",
+    "status": "ApiVerified",
+    "apiOperationIds": [
+      "GetCourses",
+      "GetCourse",
+      "CreateCourse",
+      "UpdateCourse",
+      "ApproveCourse",
+      "ArchiveCourse"
+    ],
+    "apiTestIds": [
+      "CourseTests.GetCourses_ReturnsAllCourses",
+      "CourseTests.CreateCourse_CreatesSuccessfully",
+      "CourseTests.UpdateCourse_UpdatesSuccessfully",
+      "CourseTests.ApproveCourse_RequiresManagerRole",
+      "CourseTests.ArchiveCourse_ArchivesSuccessfully"
+    ],
+    "guiRoute": "/courses",
+    "guiFeature": "Courses List",
+    "guiTestIds": [
+      "CourseUiTests.CanViewCourseList",
+      "CourseUiTests.CanCreateCourse"
+    ],
+    "backlogItemIds": [
+      "STORY-456",
+      "STORY-457"
+    ],
+    "metadata": {
+      "owner": "LearningSquad",
+      "priority": "High",
+      "apiVersion": "v1"
+    },
+    "requiredEvidenceLevel": "ApiAndGuiTests"
+  },
+  {
+    "id": "course-enrollment",
+    "name": "Course Enrollment",
+    "description": "Enroll team members in courses and manage enrollments via API",
+    "category": "Courses",
+    "status": "ApiImplemented",
+    "apiOperationIds": [
+      "EnrollCourse",
+      "GetEnrollments"
+    ],
+    "apiTestIds": [
+      "EnrollmentTests.EnrollCourse_EnrollsSuccessfully",
+      "EnrollmentTests.GetEnrollments_ReturnsEnrollments"
+    ],
+    "guiRoute": "/team/{id}",
+    "guiFeature": "Course Enrollment (in team member detail)",
+    "backlogItemIds": [
+      "STORY-458"
+    ],
+    "metadata": {
+      "owner": "LearningSquad",
+      "priority": "Medium",
+      "apiVersion": "v1"
+    },
+    "requiredEvidenceLevel": "ApiTests"
+  },
+  {
+    "id": "authentication",
+    "name": "User Authentication",
+    "description": "Login and session management via API",
+    "category": "Security",
+    "status": "FullyVerified",
+    "apiOperationIds": [
+      "Login",
+      "Logout"
+    ],
+    "apiTestIds": [
+      "AuthTests.Login_WithValidCredentials_ReturnsToken",
+      "AuthTests.Login_WithInvalidCredentials_ReturnsUnauthorized",
+      "AuthTests.Logout_TerminatesSession"
+    ],
+    "backlogItemIds": [
+      "STORY-001"
+    ],
+    "metadata": {
+      "owner": "SecuritySquad",
+      "priority": "Critical",
+      "apiVersion": "v1"
+    },
+    "requiredEvidenceLevel": "Comprehensive"
+  },
+  {
+    "id": "advanced-search",
+    "name": "Advanced Search & Filtering",
+    "description": "Search across team members and courses with advanced filters (API only, no GUI yet)",
+    "category": "Search",
+    "status": "Planned",
+    "apiOperationIds": [
+      "SearchTeamMembers",
+      "SearchCourses"
+    ],
+    "backlogItemIds": [
+      "STORY-789"
+    ],
+    "metadata": {
+      "owner": "SearchSquad",
+      "priority": "Low",
+      "apiVersion": "v2"
+    },
+    "requiredEvidenceLevel": "ApiTests"
+  }
+]

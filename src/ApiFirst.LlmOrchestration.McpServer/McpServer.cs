@@ -4,6 +4,7 @@ using ApiFirst.LlmOrchestration.Models;
 using ApiFirst.LlmOrchestration.Orchestration;
 using ApiFirst.LlmOrchestration.Planning;
 using ApiFirst.LlmOrchestration.Providers;
+using ApiFirst.LlmOrchestration.Registry;
 using ApiFirst.LlmOrchestration.Swagger;
 using System.Collections.Concurrent;
 using System.Net;
@@ -24,6 +25,74 @@ public sealed class McpServer
         new McpToolDefinition(
             "health",
             "Check whether the MCP server is running.",
+            true,
+            new Dictionary<string, object?>
+            {
+                ["type"] = "object",
+                ["properties"] = new Dictionary<string, object?>()
+            }),
+        new McpToolDefinition(
+            "list_capabilities",
+            "List all capabilities registered in the capability registry.",
+            true,
+            new Dictionary<string, object?>
+            {
+                ["type"] = "object",
+                ["properties"] = new Dictionary<string, object?>
+                {
+                    ["category"] = new Dictionary<string, object?> { ["type"] = "string" },
+                    ["status"] = new Dictionary<string, object?> { ["type"] = "string" }
+                }
+            }),
+        new McpToolDefinition(
+            "get_capability",
+            "Get detailed information about a specific capability including evidence.",
+            true,
+            new Dictionary<string, object?>
+            {
+                ["type"] = "object",
+                ["required"] = new[] { "capabilityId" },
+                ["properties"] = new Dictionary<string, object?>
+                {
+                    ["capabilityId"] = new Dictionary<string, object?> { ["type"] = "string" }
+                }
+            }),
+        new McpToolDefinition(
+            "validate_capability",
+            "Validate a capability at runtime by selectively calling its API operations. Default: SafeOperationsOnly (GET/HEAD). Use scope parameter to control validation depth.",
+            false,
+            new Dictionary<string, object?>
+            {
+                ["type"] = "object",
+                ["required"] = new[] { "capabilityId" },
+                ["properties"] = new Dictionary<string, object?>
+                {
+                    ["capabilityId"] = new Dictionary<string, object?> 
+                    { 
+                        ["type"] = "string",
+                        ["description"] = "The ID of the capability to validate"
+                    },
+                    ["swaggerUrl"] = new Dictionary<string, object?> 
+                    { 
+                        ["type"] = "string",
+                        ["description"] = "Swagger document URL"
+                    },
+                    ["apiBaseUrl"] = new Dictionary<string, object?> 
+                    { 
+                        ["type"] = "string",
+                        ["description"] = "API base URL"
+                    },
+                    ["scope"] = new Dictionary<string, object?> 
+                    { 
+                        ["type"] = "string",
+                        ["description"] = "Validation scope: None, SafeOperationsOnly (default), AllOperations",
+                        ["enum"] = new[] { "None", "SafeOperationsOnly", "AllOperations" }
+                    }
+                }
+            }),
+        new McpToolDefinition(
+            "capability_health",
+            "Get a health report comparing registry claims vs. runtime reality.",
             true,
             new Dictionary<string, object?>
             {
@@ -131,6 +200,8 @@ public sealed class McpServer
     private readonly IUserModelSettingsProvider _userModelSettingsProvider;
     private readonly ITextGenerationClientFactory _textGenerationClientFactory;
     private readonly GuiSupportProvider _guiSupportProvider;
+    private readonly CapabilityRegistry _capabilityRegistry;
+    private readonly RuntimeCapabilityValidator _capabilityValidator;
     private readonly ConcurrentDictionary<string, ApiSession> _apiSessions = new(StringComparer.OrdinalIgnoreCase);
 
     private McpServer(
@@ -138,13 +209,17 @@ public sealed class McpServer
         ISwaggerDocumentLoader swaggerDocumentLoader,
         IUserModelSettingsProvider userModelSettingsProvider,
         ITextGenerationClientFactory textGenerationClientFactory,
-        GuiSupportProvider guiSupportProvider)
+        GuiSupportProvider guiSupportProvider,
+        CapabilityRegistry capabilityRegistry,
+        RuntimeCapabilityValidator capabilityValidator)
     {
         _options = options;
         _swaggerDocumentLoader = swaggerDocumentLoader;
         _userModelSettingsProvider = userModelSettingsProvider;
         _textGenerationClientFactory = textGenerationClientFactory;
         _guiSupportProvider = guiSupportProvider;
+        _capabilityRegistry = capabilityRegistry;
+        _capabilityValidator = capabilityValidator;
     }
 
     public static McpServer CreateDefault(McpServerOptions options)
@@ -163,12 +238,35 @@ public sealed class McpServer
                 }
             }
         }
+
+        // Load capability registry
+        var registryPath = Path.Combine(AppContext.BaseDirectory, "CapabilityRegistry.json");
+        var capabilityRegistry = File.Exists(registryPath) 
+            ? CapabilityRegistry.LoadFromFile(registryPath)
+            : new CapabilityRegistry();
+
+        var swaggerLoader = new SwaggerDocumentLoader();
+        var httpClient = new HttpClient();
+
+        // Create a default base address for the validator (will be overridden at validation time)
+        var defaultBaseAddress = !string.IsNullOrWhiteSpace(options.DefaultApiBaseUrl)
+            ? new Uri(options.DefaultApiBaseUrl)
+            : new Uri("http://localhost:5000");
+
+        var apiExecutor = new HttpApiExecutor(httpClient, defaultBaseAddress);
+        var capabilityValidator = new RuntimeCapabilityValidator(
+            capabilityRegistry,
+            apiExecutor,
+            swaggerLoader);
+
         return new McpServer(
             options,
-            new SwaggerDocumentLoader(),
+            swaggerLoader,
             new EnvironmentUserModelSettingsProvider(),
-            new TextGenerationClientFactory(new HttpClient()),
-            new GuiSupportProvider());
+            new TextGenerationClientFactory(httpClient),
+            new GuiSupportProvider(),
+            capabilityRegistry,
+            capabilityValidator);
     }
 
     public async Task RunAsync(TextReader input, TextWriter output, TextWriter error, CancellationToken cancellationToken)
@@ -312,6 +410,10 @@ public sealed class McpServer
             return toolName switch
             {
                 "health" => CreateToolResult("ok", new { status = "ok" }),
+                "list_capabilities" => await ListCapabilitiesAsync(arguments, cancellationToken).ConfigureAwait(false),
+                "get_capability" => await GetCapabilityAsync(arguments, cancellationToken).ConfigureAwait(false),
+                "validate_capability" => await ValidateCapabilityAsync(arguments, cancellationToken).ConfigureAwait(false),
+                "capability_health" => await GetCapabilityHealthAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "search_operations" => await SearchOperationsAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "list_operations" => await ListOperationsAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "preview_gui" => await PreviewGuiAsync(arguments, cancellationToken).ConfigureAwait(false),
@@ -497,6 +599,213 @@ public sealed class McpServer
                 openedInBrowser = openInBrowser,
                 parametersProvided = parameters?.Keys.ToArray() ?? Array.Empty<string>()
             });
+    }
+
+    private async Task<object> ListCapabilitiesAsync(IReadOnlyDictionary<string, string?> arguments, CancellationToken cancellationToken)
+    {
+        await Task.CompletedTask.ConfigureAwait(false);
+
+        var capabilities = _capabilityRegistry.GetAllCapabilities();
+
+        if (arguments.TryGetValue("category", out var category) && !string.IsNullOrWhiteSpace(category))
+        {
+            capabilities = _capabilityRegistry.GetCapabilitiesByCategory(category);
+        }
+
+        if (arguments.TryGetValue("status", out var statusStr) && 
+            !string.IsNullOrWhiteSpace(statusStr) &&
+            Enum.TryParse<CapabilityStatus>(statusStr, ignoreCase: true, out var status))
+        {
+            capabilities = capabilities.Where(c => c.Status == status).ToList();
+        }
+
+        var result = capabilities.Select(c => new
+        {
+            c.Id,
+            c.Name,
+            c.Description,
+            c.Category,
+            Status = c.Status.ToString(),
+            ApiOperations = c.ApiOperationIds,
+            ApiTests = c.ApiTestIds?.ToArray() ?? Array.Empty<string>(),
+            ApiTestCoverage = _capabilityRegistry.GetApiTestCoverage(c.Id),
+            HasGui = !string.IsNullOrWhiteSpace(c.GuiRoute),
+            c.GuiRoute,
+            c.GuiFeature,
+            GuiTests = c.GuiTestIds?.ToArray() ?? Array.Empty<string>(),
+            RequiredEvidenceLevel = c.RequiredEvidenceLevel.ToString(),
+            c.LastVerified,
+            MeetsEvidenceRequirement = _capabilityRegistry.MeetsEvidenceRequirement(c.Id),
+            HasEvidence = _capabilityRegistry.GetLatestEvidence(c.Id) != null
+        }).ToList();
+
+        return CreateToolResult(
+            $"Found {result.Count} capabilities",
+            new { capabilities = result });
+    }
+
+    private async Task<object> GetCapabilityAsync(IReadOnlyDictionary<string, string?> arguments, CancellationToken cancellationToken)
+    {
+        await Task.CompletedTask.ConfigureAwait(false);
+
+        var capabilityId = Require(arguments, "capabilityId");
+        var capability = _capabilityRegistry.GetCapability(capabilityId);
+
+        if (capability == null)
+        {
+            return CreateToolError($"Capability '{capabilityId}' not found in registry.");
+        }
+
+        var evidence = _capabilityRegistry.GetEvidence(capabilityId);
+        var apiTestCoverage = _capabilityRegistry.GetApiTestCoverage(capabilityId);
+        var meetsRequirement = _capabilityRegistry.MeetsEvidenceRequirement(capabilityId);
+
+        var result = new
+        {
+            capability.Id,
+            capability.Name,
+            capability.Description,
+            capability.Category,
+            Status = capability.Status.ToString(),
+
+            // API-first: Core information
+            ApiOperations = capability.ApiOperationIds,
+            ApiTests = capability.ApiTestIds ?? Array.Empty<string>(),
+            ApiTestCoverage = apiTestCoverage,
+
+            // GUI: Optional layer
+            HasGui = !string.IsNullOrWhiteSpace(capability.GuiRoute),
+            GuiRoute = capability.GuiRoute,
+            GuiFeature = capability.GuiFeature,
+            GuiTests = capability.GuiTestIds ?? Array.Empty<string>(),
+
+            // Backlog and metadata
+            BacklogItems = capability.BacklogItemIds ?? Array.Empty<string>(),
+            capability.Metadata,
+
+            // Evidence tracking
+            RequiredEvidenceLevel = capability.RequiredEvidenceLevel.ToString(),
+            MeetsEvidenceRequirement = meetsRequirement,
+            capability.LastVerified,
+
+            Evidence = evidence.Select(e => new
+            {
+                Type = e.Type.ToString(),
+                Status = e.Status.ToString(),
+                Source = e.Source.ToString(),
+                e.Timestamp,
+                e.Details
+            }).ToList()
+        };
+
+        return CreateToolResult(
+            $"Retrieved capability '{capability.Name}' - API Test Coverage: {apiTestCoverage:F1}%, Evidence Requirement: {(meetsRequirement ? "Met" : "Not Met")}",
+            result);
+    }
+
+    private async Task<object> ValidateCapabilityAsync(IReadOnlyDictionary<string, string?> arguments, CancellationToken cancellationToken)
+    {
+        var capabilityId = Require(arguments, "capabilityId");
+        var swaggerUrl = ResolveSwaggerUrl(arguments);
+
+        if (string.IsNullOrWhiteSpace(swaggerUrl))
+        {
+            return CreateToolError("swaggerUrl is required for capability validation.");
+        }
+
+        var apiBaseUrl = ResolveApiBaseUrl(arguments, swaggerUrl);
+
+        // Parse validation scope (default: SafeOperationsOnly)
+        var scope = ValidationScope.SafeOperationsOnly;
+        if (arguments.TryGetValue("scope", out var scopeStr) && !string.IsNullOrWhiteSpace(scopeStr))
+        {
+            Enum.TryParse<ValidationScope>(scopeStr, ignoreCase: true, out scope);
+        }
+
+        var validationResult = await _capabilityValidator.ValidateCapabilityAsync(
+            capabilityId,
+            swaggerUrl,
+            apiBaseUrl.ToString(),
+            scope,
+            null,
+            cancellationToken).ConfigureAwait(false);
+
+        var result = new
+        {
+            validationResult.CapabilityId,
+            validationResult.Success,
+            validationResult.Message,
+            ValidationScope = scope.ToString(),
+            Operations = validationResult.OperationResults.Select(o => new
+            {
+                o.OperationId,
+                o.Success,
+                o.Message,
+                o.Executed,
+                o.StatusCode
+            }).ToList()
+        };
+
+        return CreateToolResult(
+            validationResult.Success 
+                ? $"Capability '{capabilityId}' validated successfully ({scope})" 
+                : $"Capability '{capabilityId}' validation failed",
+            result);
+    }
+
+    private async Task<object> GetCapabilityHealthAsync(IReadOnlyDictionary<string, string?> arguments, CancellationToken cancellationToken)
+    {
+        await Task.CompletedTask.ConfigureAwait(false);
+
+        var healthReport = _capabilityValidator.GetHealthReport();
+
+        var result = new
+        {
+            // API-first metrics
+            healthReport.TotalCapabilities,
+            healthReport.ApiTestedCapabilities,
+            ApiTestCoveragePercentage = (healthReport.TotalCapabilities > 0 
+                ? healthReport.ApiTestedCapabilities * 100.0 / healthReport.TotalCapabilities 
+                : 0),
+            AverageApiTestCoverage = healthReport.AverageApiTestCoverage,
+
+            // Runtime verification
+            healthReport.VerifiedCapabilities,
+            UnverifiedCapabilities = healthReport.TotalCapabilities - healthReport.VerifiedCapabilities,
+            VerificationPercentage = (healthReport.TotalCapabilities > 0 
+                ? healthReport.VerifiedCapabilities * 100.0 / healthReport.TotalCapabilities 
+                : 0),
+
+            // GUI (optional)
+            healthReport.GuiTestedCapabilities,
+            GuiCoveragePercentage = (healthReport.TotalCapabilities > 0 
+                ? healthReport.GuiTestedCapabilities * 100.0 / healthReport.TotalCapabilities 
+                : 0),
+
+            // Status breakdown
+            CapabilitiesByStatus = healthReport.CapabilitiesByStatus.Select(kvp => new
+            {
+                Status = kvp.Key.ToString(),
+                Count = kvp.Value
+            }).ToList(),
+
+            // Recent activity
+            RecentEvidence = healthReport.RecentEvidence.Select(e => new
+            {
+                e.CapabilityId,
+                Type = e.Type.ToString(),
+                Status = e.Status.ToString(),
+                Source = e.Source.ToString(),
+                e.Timestamp,
+                e.Details
+            }).ToList()
+        };
+
+        return CreateToolResult(
+            $"System: {healthReport.TotalCapabilities} capabilities, " +
+            $"{healthReport.ApiTestedCapabilities} API-tested ({healthReport.AverageApiTestCoverage:F1}% avg coverage), " +
+            $"{healthReport.VerifiedCapabilities} runtime-verified",
+            result);
     }
 
 
