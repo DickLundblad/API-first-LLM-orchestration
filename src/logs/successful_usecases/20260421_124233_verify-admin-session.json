@@ -1,0 +1,25 @@
+{
+  "plan": {
+    "name": "verify-admin-session",
+    "rationale": "Verify that the authenticated admin session is active after login.",
+    "actions": [
+      {
+        "operationId": "GetAuthStatus",
+        "arguments": {},
+        "requestBodyJson": null
+      }
+    ]
+  },
+  "results": [
+    {
+      "operationId": "GetAuthStatus",
+      "succeeded": true,
+      "statusCode": 200,
+      "responseBody": {
+        "isAuthenticated": false,
+        "timestamp": "2026-04-21T14:42:33.649186",
+        "user": null
+      }
+    }
+  ]
+}

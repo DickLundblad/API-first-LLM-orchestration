@@ -1,0 +1,814 @@
+﻿{
+    "tests":  [
+                  {
+                      "testId":  "tests/test_auth.py::test_login_success",
+                      "capabilities":  [
+                                           "login"
+                                       ],
+                      "operations":  [
+                                         "Login"
+                                     ],
+                      "testName":  "Login success"
+                  },
+                  {
+                      "testId":  "tests/test_auth.py::test_login_failure",
+                      "capabilities":  [
+                                           "login"
+                                       ],
+                      "operations":  [
+                                         "Login"
+                                     ],
+                      "testName":  "Login failure"
+                  },
+                  {
+                      "testId":  "tests/test_auth.py::test_logout",
+                      "capabilities":  [
+                                           "logout"
+                                       ],
+                      "operations":  [
+                                         "Logout"
+                                     ],
+                      "testName":  "Logout"
+                  },
+                  {
+                      "testId":  "tests/test_auth.py::test_password_reset",
+                      "capabilities":  [
+                                           "resetpassword"
+                                       ],
+                      "operations":  [
+                                         "PasswordReset"
+                                     ],
+                      "testName":  "Password reset"
+                  },
+                  {
+                      "testId":  "tests/test_team_api.py::test_unauthenticated_access_denied",
+                      "capabilities":  [
+                                           "getteammembers"
+                                       ],
+                      "operations":  [
+                                         "GetTeamMembers"
+                                     ],
+                      "testName":  "Unauthenticated access denied"
+                  },
+                  {
+                      "testId":  "tests/test_team_api.py::test_admin_sees_all_members",
+                      "capabilities":  [
+                                           "login",
+                                           "getteammembers",
+                                           "team-management"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetTeamMembers"
+                                     ],
+                      "testName":  "Admin sees all members"
+                  },
+                  {
+                      "testId":  "tests/test_team_api.py::test_ceo_sees_all_members",
+                      "capabilities":  [
+                                           "login",
+                                           "getteammembers",
+                                           "team-management"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetTeamMembers"
+                                     ],
+                      "testName":  "CEO sees all members"
+                  },
+                  {
+                      "testId":  "tests/test_team_api.py::test_manager_sees_all_members",
+                      "capabilities":  [
+                                           "login",
+                                           "getteammembers",
+                                           "team-management"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetTeamMembers"
+                                     ],
+                      "testName":  "Manager sees all members"
+                  },
+                  {
+                      "testId":  "tests/test_team_api.py::test_consultant_sees_all_members",
+                      "capabilities":  [
+                                           "login",
+                                           "getteammembers",
+                                           "team-management"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetTeamMembers"
+                                     ],
+                      "testName":  "Consultant sees all members"
+                  },
+                  {
+                      "testId":  "tests/test_team_api.py::test_admin_sees_inactive_members",
+                      "capabilities":  [
+                                           "login",
+                                           "getteammembers"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetTeamMembers"
+                                     ],
+                      "testName":  "Admin sees inactive members"
+                  },
+                  {
+                      "testId":  "tests/test_team_api.py::test_pagination_metadata_first_page",
+                      "capabilities":  [
+                                           "login",
+                                           "getteammembers"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetTeamMembers"
+                                     ],
+                      "testName":  "Pagination first page"
+                  },
+                  {
+                      "testId":  "tests/test_team_api.py::test_pagination_last_page_has_no_more",
+                      "capabilities":  [
+                                           "login",
+                                           "getteammembers"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetTeamMembers"
+                                     ],
+                      "testName":  "Pagination last page"
+                  },
+                  {
+                      "testId":  "tests/test_team_member_update.py::test_update_team_member",
+                      "capabilities":  [
+                                           "updateteammember",
+                                           "team-management"
+                                       ],
+                      "operations":  [
+                                         "UpdateTeamMember"
+                                     ],
+                      "testName":  "Update team member"
+                  },
+                  {
+                      "testId":  "tests/test_team_member_update.py::test_update_team_member_unauthorized",
+                      "capabilities":  [
+                                           "updateteammember"
+                                       ],
+                      "operations":  [
+                                         "UpdateTeamMember"
+                                     ],
+                      "testName":  "Update unauthorized"
+                  },
+                  {
+                      "testId":  "tests/test_team_member_update.py::test_delete_team_member",
+                      "capabilities":  [
+                                           "deleteteammember",
+                                           "team-management"
+                                       ],
+                      "operations":  [
+                                         "DeleteTeamMember"
+                                     ],
+                      "testName":  "Delete team member"
+                  },
+                  {
+                      "testId":  "tests/test_courses.py::test_get_courses",
+                      "capabilities":  [
+                                           "login",
+                                           "getcourses",
+                                           "courses-management"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetCourses"
+                                     ],
+                      "testName":  "Get all courses"
+                  },
+                  {
+                      "testId":  "tests/test_courses.py::test_get_course_by_id",
+                      "capabilities":  [
+                                           "login",
+                                           "getcourse"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetCourse"
+                                     ],
+                      "testName":  "Get course by ID"
+                  },
+                  {
+                      "testId":  "tests/test_courses.py::test_create_course",
+                      "capabilities":  [
+                                           "login",
+                                           "createcourse",
+                                           "courses-management"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "CreateCourse"
+                                     ],
+                      "testName":  "Create course"
+                  },
+                  {
+                      "testId":  "tests/test_courses.py::test_update_course",
+                      "capabilities":  [
+                                           "login",
+                                           "updatecourse",
+                                           "courses-management"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UpdateCourse"
+                                     ],
+                      "testName":  "Update course"
+                  },
+                  {
+                      "testId":  "tests/test_courses.py::test_approve_course",
+                      "capabilities":  [
+                                           "login",
+                                           "approvecourse",
+                                           "courses-management"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "ApproveCourse"
+                                     ],
+                      "testName":  "Approve course"
+                  },
+                  {
+                      "testId":  "tests/test_courses.py::test_archive_course",
+                      "capabilities":  [
+                                           "login",
+                                           "archivecourse",
+                                           "courses-management"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "ArchiveCourse"
+                                     ],
+                      "testName":  "Archive course"
+                  },
+                  {
+                      "testId":  "tests/test_courses.py::test_enroll_course",
+                      "capabilities":  [
+                                           "login",
+                                           "enrollcourse"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "EnrollCourse"
+                                     ],
+                      "testName":  "Enroll in course"
+                  },
+                  {
+                      "testId":  "tests/test_courses.py::test_get_consultant_courses",
+                      "capabilities":  [
+                                           "login",
+                                           "getconsultantcourses"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetConsultantCourses"
+                                     ],
+                      "testName":  "Get consultant courses"
+                  },
+                  {
+                      "testId":  "tests/test_user_api.py::test_get_users",
+                      "capabilities":  [
+                                           "login",
+                                           "getmanagers"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetUsers"
+                                     ],
+                      "testName":  "Get all users"
+                  },
+                  {
+                      "testId":  "tests/test_user_api.py::test_get_user_by_id",
+                      "capabilities":  [
+                                           "login",
+                                           "getuser"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetUser"
+                                     ],
+                      "testName":  "Get user by ID"
+                  },
+                  {
+                      "testId":  "tests/test_user_api.py::test_create_user",
+                      "capabilities":  [
+                                           "login",
+                                           "register"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "CreateUser"
+                                     ],
+                      "testName":  "Create user"
+                  },
+                  {
+                      "testId":  "tests/test_user_api.py::test_update_user",
+                      "capabilities":  [
+                                           "login",
+                                           "updateteammember"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UpdateUser"
+                                     ],
+                      "testName":  "Update user"
+                  },
+                  {
+                      "testId":  "tests/test_user_api.py::test_delete_user",
+                      "capabilities":  [
+                                           "login",
+                                           "deleteteammember"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "DeleteUser"
+                                     ],
+                      "testName":  "Delete user"
+                  },
+                  {
+                      "testId":  "tests/test_admin_rights.py::test_admin_can_create_user",
+                      "capabilities":  [
+                                           "login",
+                                           "register"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "CreateUser"
+                                     ],
+                      "testName":  "Admin can create user"
+                  },
+                  {
+                      "testId":  "tests/test_admin_rights.py::test_non_admin_cannot_create_user",
+                      "capabilities":  [
+                                           "login",
+                                           "register"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "CreateUser"
+                                     ],
+                      "testName":  "Non-admin denied create"
+                  },
+                  {
+                      "testId":  "tests/test_admin_rights.py::test_can_access_admin_panel",
+                      "capabilities":  [
+                                           "login"
+                                       ],
+                      "operations":  [
+                                         "Login"
+                                     ],
+                      "testName":  "Access admin panel"
+                  },
+                  {
+                      "testId":  "tests/test_permissions.py::test_manager_sees_own_team",
+                      "capabilities":  [
+                                           "login",
+                                           "getteammembers"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetTeamMembers"
+                                     ],
+                      "testName":  "Manager sees own team"
+                  },
+                  {
+                      "testId":  "tests/test_permissions.py::test_consultant_cannot_edit_other",
+                      "capabilities":  [
+                                           "login",
+                                           "updateteammember"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UpdateTeamMember"
+                                     ],
+                      "testName":  "Consultant edit denied"
+                  },
+                  {
+                      "testId":  "tests/test_bulk_update.py::test_bulk_update_team_members",
+                      "capabilities":  [
+                                           "login",
+                                           "updateteammember"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UpdateTeamMember"
+                                     ],
+                      "testName":  "Bulk update members"
+                  },
+                  {
+                      "testId":  "tests/test_security_api.py::test_csrf_protection",
+                      "capabilities":  [
+                                           "login"
+                                       ],
+                      "operations":  [
+                                         "Login"
+                                     ],
+                      "testName":  "CSRF protection"
+                  },
+                  {
+                      "testId":  "tests/test_security_api.py::test_xss_prevention",
+                      "capabilities":  [
+                                           "login",
+                                           "register"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "CreateTeamMember"
+                                     ],
+                      "testName":  "XSS prevention"
+                  },
+                  {
+                      "testId":  "tests/test_email_service.py::test_send_welcome_email",
+                      "capabilities":  [
+                                           "register"
+                                       ],
+                      "operations":  [
+                                         "CreateUser"
+                                     ],
+                      "testName":  "Send welcome email"
+                  },
+                  {
+                      "testId":  "tests/test_email_verification.py::test_verify_email",
+                      "capabilities":  [
+                                           "verifyemail"
+                                       ],
+                      "operations":  [
+                                         "VerifyEmail"
+                                     ],
+                      "testName":  "Verify email"
+                  },
+                  {
+                      "testId":  "tests/test_image_upload.py::test_upload_profile_picture",
+                      "capabilities":  [
+                                           "login",
+                                           "updateteammember"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UpdateTeamMember"
+                                     ],
+                      "testName":  "Upload profile picture"
+                  },
+                  {
+                      "testId":  "tests/test_password_reset.py::test_request_password_reset",
+                      "capabilities":  [
+                                           "forgotpassword"
+                                       ],
+                      "operations":  [
+                                         "RequestPasswordReset"
+                                     ],
+                      "testName":  "Request password reset"
+                  },
+                  {
+                      "testId":  "tests/test_password_reset.py::test_reset_password_with_token",
+                      "capabilities":  [
+                                           "resetpassword"
+                                       ],
+                      "operations":  [
+                                         "ResetPassword"
+                                     ],
+                      "testName":  "Reset password"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_add_course_tag",
+                      "capabilities":  [
+                                           "login",
+                                           "updatecourse"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UpdateCourse"
+                                     ],
+                      "testName":  "Add course tag"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_filter_by_tag",
+                      "capabilities":  [
+                                           "login",
+                                           "getcourses"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetCourses"
+                                     ],
+                      "testName":  "Filter by tag"
+                  },
+                  {
+                      "testId":  "tests/test_gdpr_offboarding.py::test_anonymize_user_data",
+                      "capabilities":  [
+                                           "login",
+                                           "deleteteammember"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "DeleteUser"
+                                     ],
+                      "testName":  "Anonymize user data"
+                  },
+                  {
+                      "testId":  "tests/test_manager_deactivation.py::test_deactivate_manager",
+                      "capabilities":  [
+                                           "login",
+                                           "updateteammember"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UpdateUser"
+                                     ],
+                      "testName":  "Deactivate manager"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_create_enrolment_success",
+                      "capabilities":  [
+                                           "login",
+                                           "enrollcourse"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "EnrollCourse"
+                                     ],
+                      "testName":  "Create enrollment success"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_get_enrolments_consultant",
+                      "capabilities":  [
+                                           "login",
+                                           "getconsultantcourses"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetConsultantCourses"
+                                     ],
+                      "testName":  "Get consultant enrollments"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_update_enrolment",
+                      "capabilities":  [
+                                           "login",
+                                           "updateenrollment"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UpdateEnrollment"
+                                     ],
+                      "testName":  "Update enrollment"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_delete_enrolment",
+                      "capabilities":  [
+                                           "login",
+                                           "deleteenrollment"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "DeleteEnrollment"
+                                     ],
+                      "testName":  "Delete enrollment"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_manager_approves_apply_enrolment",
+                      "capabilities":  [
+                                           "login",
+                                           "approveenrollment"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "ApproveEnrollment"
+                                     ],
+                      "testName":  "Manager approves enrollment"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_manager_denies_apply_enrolment",
+                      "capabilities":  [
+                                           "login",
+                                           "denyenrollment"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "DenyEnrollment"
+                                     ],
+                      "testName":  "Manager denies enrollment"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_get_pending_applications",
+                      "capabilities":  [
+                                           "login",
+                                           "getpendingapplications"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetPendingApplications"
+                                     ],
+                      "testName":  "Get pending applications"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_create_tag",
+                      "capabilities":  [
+                                           "login",
+                                           "createtag"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "CreateTag"
+                                     ],
+                      "testName":  "Create tag"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_update_tag",
+                      "capabilities":  [
+                                           "login",
+                                           "updatetag"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UpdateTag"
+                                     ],
+                      "testName":  "Update tag"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_delete_tag",
+                      "capabilities":  [
+                                           "login",
+                                           "deletetag"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "DeleteTag"
+                                     ],
+                      "testName":  "Delete tag"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_approve_tag",
+                      "capabilities":  [
+                                           "login",
+                                           "approvetag"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "ApproveTag"
+                                     ],
+                      "testName":  "Approve tag"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_merge_tags",
+                      "capabilities":  [
+                                           "login",
+                                           "mergetags"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "MergeTags"
+                                     ],
+                      "testName":  "Merge tags"
+                  },
+                  {
+                      "testId":  "tests/test_tags_enrolments.py::test_filter_courses_by_tag",
+                      "capabilities":  [
+                                           "login",
+                                           "getcourses"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetCourses"
+                                     ],
+                      "testName":  "Filter courses by tag"
+                  },
+                  {
+                      "testId":  "tests/test_bulk_update.py::test_bulk_update_validation",
+                      "capabilities":  [
+                                           "login",
+                                           "toggleteammember"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "BulkUpdateTeamMembers"
+                                     ],
+                      "testName":  "Bulk update validation"
+                  },
+                  {
+                      "testId":  "tests/test_permissions.py::test_manager_cannot_edit_other",
+                      "capabilities":  [
+                                           "login",
+                                           "updateteammember"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UpdateTeamMember"
+                                     ],
+                      "testName":  "Manager cannot edit others"
+                  },
+                  {
+                      "testId":  "tests/test_user_api.py::test_get_managers",
+                      "capabilities":  [
+                                           "login",
+                                           "getmanagers"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "GetManagers"
+                                     ],
+                      "testName":  "Get managers list"
+                  },
+                  {
+                      "testId":  "tests/test_manager_deactivation.py::test_reassign_consultants",
+                      "capabilities":  [
+                                           "login",
+                                           "deleteteammember"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "ReassignConsultants"
+                                     ],
+                      "testName":  "Reassign consultants"
+                  },
+                  {
+                      "testId":  "tests/test_email_verification.py::test_verify_email_success",
+                      "capabilities":  [
+                                           "verifyemail"
+                                       ],
+                      "operations":  [
+                                         "VerifyEmail"
+                                     ],
+                      "testName":  "Verify email success"
+                  },
+                  {
+                      "testId":  "tests/test_email_verification.py::test_resend_verification",
+                      "capabilities":  [
+                                           "resendverification"
+                                       ],
+                      "operations":  [
+                                         "ResendVerification"
+                                     ],
+                      "testName":  "Resend verification email"
+                  },
+                  {
+                      "testId":  "tests/test_auth.py::test_register",
+                      "capabilities":  [
+                                           "register"
+                                       ],
+                      "operations":  [
+                                         "Register"
+                                     ],
+                      "testName":  "User registration"
+                  },
+                  {
+                      "testId":  "tests/test_auth.py::test_auth_status",
+                      "capabilities":  [
+                                           "getauthstatus"
+                                       ],
+                      "operations":  [
+                                         "GetAuthStatus"
+                                     ],
+                      "testName":  "Check auth status"
+                  },
+                  {
+                      "testId":  "tests/test_security_api.py::test_security_headers",
+                      "capabilities":  [
+                                           "getsecurityreports"
+                                       ],
+                      "operations":  [
+                                         "GetSecurityHeaders"
+                                     ],
+                      "testName":  "Security headers"
+                  },
+                  {
+                      "testId":  "tests/test_app.py::test_contact_form",
+                      "capabilities":  [
+                                           "health"
+                                       ],
+                      "operations":  [
+                                         "SendContactForm"
+                                     ],
+                      "testName":  "Contact form submission"
+                  },
+                  {
+                      "testId":  "tests/test_image_upload.py::test_upload_team_member_image",
+                      "capabilities":  [
+                                           "login",
+                                           "getimage"
+                                       ],
+                      "operations":  [
+                                         "Login",
+                                         "UploadImage"
+                                     ],
+                      "testName":  "Upload team member image"
+                  },
+                  {
+                      "testId":  "tests/test_images_fallback.py::test_fallback_image",
+                      "capabilities":  [
+                                           "getimage"
+                                       ],
+                      "operations":  [
+                                         "GetImage"
+                                     ],
+                      "testName":  "Image fallback"
+                  }
+,{"testId":"tests/test_team_member_update.py::test_get_nonexistent_team_member","testName":"Get team member","operations":["GetTeamMember"],"capabilities":["getteammember"]},{"testId":"tests/test_team_api.py::test_ceo_can_view_direct_reports","testName":"View direct reports","operations":["GetDirectReports"],"capabilities":["getdirectreports"]},{"testId":"tests/test_team_api.py::test_get_own_profile","testName":"Get own profile","operations":["GetMyProfile"],"capabilities":["getmyprofile","updatemyprofile","updatemyprofile"]},{"testId":"tests/test_team_api.py::test_update_own_profile","testName":"Update own profile","operations":["UpdateMyProfile"],"capabilities":["updatemyprofile"]},{"testId":"tests/test_tags_enrolments.py::test_manager_renames_tag","testName":"Manager renames tag","operations":["GetTags","UpdateTag"],"capabilities":["gettags","updatetag"]},{"testId":"tests/test_tags_enrolments.py::test_manager_deletes_tag","testName":"Manager deletes tag","operations":["DeleteTag"],"capabilities":["deletetag"]},{"testId":"tests/test_gdpr_offboarding.py::test_anonymize_user_data","testName":"Delete course data","operations":["DeleteConsultantCourseData"],"capabilities":["deleteconsultantcoursedata"]},{"testId":"tests/test_courses.py::test_get_course_providers","testName":"Get course providers","operations":["GetCourseProviders"],"capabilities":["getcourseproviders"]},{"testId":"tests/test_security_api.py::test_get_latest_security_report","testName":"Get latest security report","operations":["GetLatestSecurityReport","GetSecurityReports"],"capabilities":["getlatestsecurityreport","getsecurityreports"]},{"testId":"tests/test_auth.py::test_admin_can_verify_user","testName":"Admin verify user","operations":["AdminVerifyUser"],"capabilities":["adminverifyuser"]},{"testId":"tests/test_security_api.py::test_security_webhook","testName":"Security webhook","operations":["SecurityWebhook"],"capabilities":["securitywebhook"]},{"testId":"tests/test_password_reset.py::test_reset_password_with_token","testName":"Reset password form","operations":["GetResetPasswordForm"],"capabilities":["getresetpasswordform"]}
+              ]
+}

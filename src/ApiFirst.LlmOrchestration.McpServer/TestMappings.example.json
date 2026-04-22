@@ -1,0 +1,45 @@
+{
+  "tests": [
+    {
+      "testId": "tests/api/test_team.py::test_get_team_members",
+      "testName": "Test Get Team Members",
+      "operations": [
+        "GetTeamMembers"
+      ],
+      "capabilities": [
+        "getteammembers",
+        "team-management"
+      ]
+    },
+    {
+      "testId": "tests/api/test_team.py::test_get_team_member_by_id",
+      "testName": "Test Get Team Member By ID",
+      "operations": [
+        "GetTeamMember"
+      ],
+      "capabilities": [
+        "getteammember"
+      ]
+    },
+    {
+      "testId": "tests/api/test_team.py::test_update_team_member",
+      "testName": "Test Update Team Member",
+      "operations": [
+        "UpdateTeamMember"
+      ],
+      "capabilities": [
+        "updateteammember"
+      ]
+    },
+    {
+      "testId": "tests/api/test_courses.py::test_enroll_course",
+      "testName": "Test Enroll Course",
+      "operations": [
+        "EnrollCourse"
+      ],
+      "capabilities": [
+        "enrollcourse"
+      ]
+    }
+  ]
+}

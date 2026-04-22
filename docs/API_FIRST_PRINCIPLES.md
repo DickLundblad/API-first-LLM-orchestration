@@ -831,3 +831,7 @@ Status: ApiVerified ✅ (production-ready!)
 ---
 
 **Sammanfattning:** API-first betyder att **API operations och API tests** är kärnan. GUI, screenshots, och manuell verifiering är sekundära eller dokumentationssyften. Registry är en **förberedd deklaration**, inte auto-discovery. Runtime validation är **selektiv** för att undvika side effects.
+
+# Search for test files
+   Get-ChildItem -Path "..\..\tests" -Recurse -Filter "*Tests.cs" | 
+     Select-String -Pattern "\[Fact\]" -Context 0,1

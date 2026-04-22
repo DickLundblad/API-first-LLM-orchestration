@@ -1,4 +1,4 @@
-using ApiFirst.LlmOrchestration.Models;
+    using ApiFirst.LlmOrchestration.Models;
 using System.Text.Json;
 
 namespace ApiFirst.LlmOrchestration.Registry;
@@ -214,7 +214,8 @@ public sealed class CapabilityRegistry
         var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
         };
 
         var capabilities = JsonSerializer.Deserialize<List<UseCaseCapability>>(json, options);
@@ -237,7 +238,8 @@ public sealed class CapabilityRegistry
         var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
+            WriteIndented = true,
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
         };
 
         var json = JsonSerializer.Serialize(_capabilitiesById.Values.ToList(), options);

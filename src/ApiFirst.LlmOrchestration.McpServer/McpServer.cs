@@ -100,6 +100,47 @@ public sealed class McpServer
                 ["properties"] = new Dictionary<string, object?>()
             }),
         new McpToolDefinition(
+            "capability_coverage",
+            "Get test coverage report for all capabilities. Shows which capabilities have tests and coverage percentage.",
+            true,
+            new Dictionary<string, object?>
+            {
+                ["type"] = "object",
+                ["properties"] = new Dictionary<string, object?>()
+            }),
+        new McpToolDefinition(
+            "discover_tests",
+            "Discover and link test methods from test assemblies to capabilities.",
+            true,
+            new Dictionary<string, object?>
+            {
+                ["type"] = "object",
+                ["properties"] = new Dictionary<string, object?>
+                {
+                    ["assemblyPath"] = new Dictionary<string, object?> 
+                    { 
+                        ["type"] = "string",
+                        ["description"] = "Path to test assembly (optional, auto-discovers if not specified)"
+                    }
+                }
+            }),
+        new McpToolDefinition(
+            "generate_test_template",
+            "Generate a TestMappings.json template file for linking external tests (e.g., Python tests) to capabilities.",
+            true,
+            new Dictionary<string, object?>
+            {
+                ["type"] = "object",
+                ["properties"] = new Dictionary<string, object?>
+                {
+                    ["outputPath"] = new Dictionary<string, object?> 
+                    { 
+                        ["type"] = "string",
+                        ["description"] = "Output path for template file (default: TestMappings.json)"
+                    }
+                }
+            }),
+        new McpToolDefinition(
             "search_operations",
             "Search swagger operations by keyword.",
             true,
@@ -239,13 +280,34 @@ public sealed class McpServer
             }
         }
 
-        // Load capability registry
-        var registryPath = Path.Combine(AppContext.BaseDirectory, "CapabilityRegistry.json");
-        var capabilityRegistry = File.Exists(registryPath) 
-            ? CapabilityRegistry.LoadFromFile(registryPath)
-            : new CapabilityRegistry();
+        // Create empty capability registry - will be populated dynamically from Swagger
+        var capabilityRegistry = new CapabilityRegistry();
 
         var swaggerLoader = new SwaggerDocumentLoader();
+
+        // Generate capabilities from Swagger if default URL is configured
+        if (!string.IsNullOrWhiteSpace(options.DefaultSwaggerUrl))
+        {
+            try
+            {
+                var catalog = swaggerLoader.LoadFromUrlAsync(options.DefaultSwaggerUrl).GetAwaiter().GetResult();
+                var generatedCapabilities = CapabilityGenerator.GenerateFromSwagger(catalog);
+
+                foreach (var capability in generatedCapabilities)
+                {
+                    capabilityRegistry.RegisterCapability(capability);
+                }
+
+                Console.Error.WriteLine($"[CapabilityRegistry] Generated {generatedCapabilities.Count} capabilities from Swagger");
+
+                // Link tests from external test mappings
+                TryLinkExternalTests(capabilityRegistry);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[CapabilityRegistry] Warning: Could not generate from Swagger: {ex.Message}");
+            }
+        }
         var httpClient = new HttpClient();
 
         // Create a default base address for the validator (will be overridden at validation time)
@@ -267,6 +329,75 @@ public sealed class McpServer
             new GuiSupportProvider(),
             capabilityRegistry,
             capabilityValidator);
+    }
+
+    private static void TryLinkExternalTests(CapabilityRegistry registry)
+    {
+        try
+        {
+            // Look for test mapping files in common locations
+            var testMappingPaths = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "TestMappings.json"),
+                Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "TestMappings.json"),
+                "TestMappings.json"
+            };
+
+            var foundMapping = false;
+
+            foreach (var path in testMappingPaths)
+            {
+                var fullPath = Path.GetFullPath(path);
+                if (File.Exists(fullPath))
+                {
+                    ExternalTestMapper.LoadFromFile(fullPath, registry);
+                    foundMapping = true;
+                    Console.Error.WriteLine($"[TestMapping] Loaded test mappings from {Path.GetFileName(fullPath)}");
+                    break;
+                }
+            }
+
+            // Also check for pytest report files
+            var pytestReportPaths = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "pytest-report.json"),
+                Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "pytest-report.json"),
+                "pytest-report.json"
+            };
+
+            foreach (var path in pytestReportPaths)
+            {
+                var fullPath = Path.GetFullPath(path);
+                if (File.Exists(fullPath))
+                {
+                    ExternalTestMapper.LoadFromPytestReport(fullPath, registry);
+                    foundMapping = true;
+                    Console.Error.WriteLine($"[TestMapping] Loaded pytest report from {Path.GetFileName(fullPath)}");
+                    break;
+                }
+            }
+
+            if (foundMapping)
+            {
+                var capabilitiesWithTests = registry.GetAllCapabilities().Count(c => c.ApiTestIds?.Count > 0);
+                var totalTests = registry.GetAllCapabilities().Sum(c => c.ApiTestIds?.Count ?? 0);
+                var capabilitiesWithEvidence = registry.GetAllCapabilities().Count(c => registry.MeetsEvidenceRequirement(c.Id));
+
+                Console.Error.WriteLine($"[TestMapping] Linked {totalTests} tests to {capabilitiesWithTests} capabilities");
+                Console.Error.WriteLine($"[TestMapping] {capabilitiesWithEvidence} capabilities now have evidence");
+            }
+            else
+            {
+                Console.Error.WriteLine("[TestMapping] No test mappings found - you can:");
+                Console.Error.WriteLine("  1. Create TestMappings.json manually");
+                Console.Error.WriteLine("  2. Use 'generate_test_template' MCP tool");
+                Console.Error.WriteLine("  3. Provide pytest-report.json from Python tests");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[TestMapping] Warning: Could not link tests: {ex.Message}");
+        }
     }
 
     public async Task RunAsync(TextReader input, TextWriter output, TextWriter error, CancellationToken cancellationToken)
@@ -414,6 +545,8 @@ public sealed class McpServer
                 "get_capability" => await GetCapabilityAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "validate_capability" => await ValidateCapabilityAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "capability_health" => await GetCapabilityHealthAsync(arguments, cancellationToken).ConfigureAwait(false),
+                "capability_coverage" => GetCapabilityCoverage(arguments),
+                "generate_test_template" => GenerateTestTemplate(arguments),
                 "search_operations" => await SearchOperationsAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "list_operations" => await ListOperationsAsync(arguments, cancellationToken).ConfigureAwait(false),
                 "preview_gui" => await PreviewGuiAsync(arguments, cancellationToken).ConfigureAwait(false),
@@ -806,6 +939,43 @@ public sealed class McpServer
             $"{healthReport.ApiTestedCapabilities} API-tested ({healthReport.AverageApiTestCoverage:F1}% avg coverage), " +
             $"{healthReport.VerifiedCapabilities} runtime-verified",
             result);
+    }
+
+    private object GetCapabilityCoverage(IReadOnlyDictionary<string, string?> arguments)
+    {
+        var coverageReport = CapabilityGenerator.CalculateCoverage(_capabilityRegistry);
+
+        var summary = $"Coverage: {coverageReport.CapabilitiesWithTests}/{coverageReport.TotalCapabilities} capabilities have tests " +
+                      $"({coverageReport.OverallCoveragePercentage:F1}%). " +
+                      $"Total: {coverageReport.TotalOperations} operations, {coverageReport.TotalTests} tests.";
+
+        return CreateToolResult(summary, coverageReport);
+    }
+
+    private object GenerateTestTemplate(IReadOnlyDictionary<string, string?> arguments)
+    {
+        var outputPath = arguments.TryGetValue("outputPath", out var path) && !string.IsNullOrWhiteSpace(path)
+            ? path
+            : Path.Combine(AppContext.BaseDirectory, "TestMappings.json");
+
+        try
+        {
+            ExternalTestMapper.GenerateTemplateFile(outputPath, _capabilityRegistry);
+
+            var fullPath = Path.GetFullPath(outputPath);
+            return CreateToolResult(
+                $"Generated test mapping template at {fullPath}",
+                new
+                {
+                    outputPath = fullPath,
+                    capabilities = _capabilityRegistry.GetAllCapabilities().Count,
+                    message = "Edit this file to link your Python tests to capabilities"
+                });
+        }
+        catch (Exception ex)
+        {
+            return CreateToolError($"Failed to generate template: {ex.Message}");
+        }
     }
 
 
